@@ -2,6 +2,19 @@
   const qs = new URLSearchParams(location.search);
   const utms = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
   document.querySelectorAll('[data-nav-toggle]').forEach(btn=>btn.addEventListener('click',()=>document.querySelector('[data-nav]')?.classList.toggle('is-open')));
+  document.querySelectorAll('[data-submenu-toggle]').forEach(btn=>btn.addEventListener('click',(e)=>{
+    e.preventDefault();
+    btn.closest('.nav-item')?.classList.toggle('is-open');
+  }));
+  document.querySelectorAll('[data-sync-condition]').forEach(hidden=>{
+    const form=hidden.closest('form');
+    const sync=()=>{
+      const checked=form?.querySelector('[name="premise_condition"]:checked');
+      if(checked) hidden.value=checked.value;
+    };
+    form?.querySelectorAll('[name="premise_condition"]').forEach(r=>r.addEventListener('change',sync));
+    sync();
+  });
   document.querySelectorAll('form[data-lead-form]').forEach(form=>{
     utms.forEach(k=>form.querySelectorAll(`[name="${k}"]`).forEach(i=>i.value=qs.get(k)||''));
     form.addEventListener('submit', async (e)=>{

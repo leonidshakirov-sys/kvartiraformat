@@ -15,6 +15,7 @@ use App\Repositories\SiteRepository;
 use App\Services\LeadService;
 use App\Services\TelegramService;
 use App\Services\UploadService;
+use App\Support\CommercialCatalog;
 
 if (PHP_SAPI === 'cli-server') {
     $staticPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
@@ -45,8 +46,8 @@ $db = new Database($config);
 $repo = new SiteRepository($db);
 $view = new View($root . '/app/Views');
 $telegram = new TelegramService($config, $db);
-$leadService = new LeadService($db, $config, $repo, $telegram);
-$uploadService = new UploadService($config, $root . '/public/uploads');
+$uploadService = new UploadService($config, $root . '/public/uploads', $root . '/storage/lead-files');
+$leadService = new LeadService($db, $config, $repo, $telegram, $uploadService);
 $public = new PublicController($view, $repo);
 $leads = new LeadController($leadService);
 $admin = new AdminController($view, $repo, new Auth($db), $config, $telegram, $uploadService);
@@ -76,6 +77,8 @@ try {
         $path === '/' => $public->home(),
         $path === '/contacts' || $path === '/contacts/' => $public->contacts(),
         $path === '/portfolio' || $path === '/portfolio/' => $public->portfolio(),
+        $pathNoSlash === CommercialCatalog::HUB_SLUG => $public->commercialHub(),
+        CommercialCatalog::isServiceSlug($pathNoSlash) => $public->commercialService($pathNoSlash),
         in_array($pathNoSlash, ['privacy-policy', 'personal-data-consent', 'cookies'], true) => $public->legal($pathNoSlash),
         preg_match('#^uslugi/([a-z0-9-]+)/?$#', $pathNoSlash, $m) === 1 => $public->service($m[1]),
         preg_match('#^remont-kvartir/([a-z0-9-]+)/?$#', $pathNoSlash, $m) === 1 => $public->geo($m[1]),

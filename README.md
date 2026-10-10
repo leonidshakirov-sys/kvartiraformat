@@ -57,6 +57,18 @@ PHP/MySQL-сайт под обычный виртуальный хостинг B
 - Лимит попыток входа хранится в `login_attempts`.
 - Секреты не коммитятся: `config/config.php` в `.gitignore`.
 
+## Коммерческий ремонт
+
+Новое направление встроено в текущий сайт, без отдельной админки и без удаления квартирных страниц.
+
+- Общая страница: `/remont-kommercheskih-pomescheniy/`
+- Услуги: `/remont-ofisov/`, `/remont-magazinov/`, `/remont-salonov-krasoty/`, `/remont-kafe-restoranov/`, `/remont-skladskih-pomescheniy/`, `/remont-pomescheniy-svobodnogo-naznacheniya/`
+- Калькулятор коммерческого режима с вложением ТЗ/плана (файлы в `storage/lead-files/`, скачивание только из админки)
+- Тип заявки «Коммерческий ремонт», фильтр в `/admin/leads` и раздел `/admin/commercial`
+- Фото: `public/assets/images/commercial/*.webp`
+
+На уже работающей базе колонки добавляются автоматически при первом запросе к сайту (с резервной копией в `storage/backups/`). Для ручного импорта есть `database/commercial-repair.sql`.
+
 ## Проверка перед публикацией
 
 См. `docs/launch-checklist.md` и `docs/qa-report.md`.

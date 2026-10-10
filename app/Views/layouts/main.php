@@ -42,7 +42,13 @@
         <a class="logo" href="/" aria-label="КвартираФормат — главная"><span>КВАРТИРА</span><b>ФОРМАТ</b><small><?= e($s['brand_tagline'] ?? 'Ремонт квартир под ключ') ?></small></a>
         <button class="nav-toggle" type="button" data-nav-toggle aria-label="Открыть меню">☰</button>
         <nav class="nav" data-nav>
-            <a href="/#services">Услуги</a>
+            <div class="nav-item has-menu">
+                <button class="nav-link" type="button" data-submenu-toggle>Услуги</button>
+                <div class="nav-submenu">
+                    <a href="/#services">Ремонт квартир</a>
+                    <a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a>
+                </div>
+            </div>
             <a href="/#prices">Цены</a>
             <a href="/portfolio/">Портфолио</a>
             <a href="/#about">О компании</a>
@@ -56,11 +62,12 @@
 <footer class="site-footer">
     <div class="container footer-grid">
         <div><a class="logo logo-footer" href="/"><span>КВАРТИРА</span><b>ФОРМАТ</b><small>Ремонт квартир под ключ</small></a><p>Москва и Московская область. Комплексный ремонт квартир, апартаментов и вторичного жилья.</p></div>
-        <div><h3>Разделы</h3><a href="/#services">Услуги</a><a href="/#prices">Цены</a><a href="/portfolio/">Портфолио</a><a href="/#geo">География</a><a href="/contacts/">Контакты</a></div>
+        <div><h3>Разделы</h3><a href="/#services">Ремонт квартир</a><a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a><a href="/#prices">Цены</a><a href="/portfolio/">Портфолио</a><a href="/contacts/">Контакты</a></div>
+        <div><h3>Коммерческий ремонт</h3><a href="/remont-ofisov/">Офисы</a><a href="/remont-magazinov/">Магазины</a><a href="/remont-salonov-krasoty/">Салоны красоты</a><a href="/remont-kafe-restoranov/">Кафе и рестораны</a><a href="/remont-skladskih-pomescheniy/">Склады</a><a href="/remont-pomescheniy-svobodnogo-naznacheniya/">Свободное назначение</a></div>
         <div><h3>Реквизиты</h3><p><?= e($s['legal_name'] ?? '') ?><br>ИНН <?= e($s['inn'] ?? '') ?><br><a href="<?= e($s['phone_href'] ?? '') ?>"><?= e($s['phone'] ?? '') ?></a><br><?= e($s['office_address'] ?? '') ?></p></div>
         <div><h3>Документы</h3><a href="/privacy-policy/">Политика обработки персональных данных</a><a href="/personal-data-consent/">Согласие на обработку персональных данных</a><a href="/cookies/">Cookies</a></div>
     </div>
 </footer>
-<nav class="mobile-actions" aria-label="Быстрые действия"><a data-goal="phone_click" href="<?= e($s['phone_href'] ?? '') ?>">Позвонить</a><a href="/#calculator" data-goal="calculator_start">Рассчитать</a><a href="/#lead-form" data-goal="callback_request">Заявка</a></nav>
+<nav class="mobile-actions" aria-label="Быстрые действия"><a data-goal="phone_click" href="<?= e($s['phone_href'] ?? '') ?>">Позвонить</a><a href="<?= e($calcHref ?? '/#calculator') ?>" data-goal="calculator_start">Рассчитать</a><a href="<?= e($leadHref ?? '/#lead-form') ?>" data-goal="callback_request">Заявка</a></nav>
 </body>
 </html>

@@ -55,8 +55,10 @@ CREATE TABLE IF NOT EXISTS services (
   h1 VARCHAR(255) NULL,
   is_published TINYINT(1) NOT NULL DEFAULT 1,
   sort_order INT NOT NULL DEFAULT 100,
+  category VARCHAR(40) NOT NULL DEFAULT 'apartment',
   created_at DATETIME NOT NULL,
-  updated_at DATETIME NOT NULL
+  updated_at DATETIME NOT NULL,
+  INDEX idx_services_category (category, is_published, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS geo_pages (
@@ -81,6 +83,7 @@ CREATE TABLE IF NOT EXISTS repair_tariffs (
   note TEXT NULL,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   sort_order INT NOT NULL DEFAULT 100,
+  category VARCHAR(40) NOT NULL DEFAULT 'apartment',
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   INDEX idx_tariff_lookup (repair_type, package_type, is_active)
@@ -92,6 +95,7 @@ CREATE TABLE IF NOT EXISTS advantages (
   text TEXT NOT NULL,
   is_published TINYINT(1) NOT NULL DEFAULT 1,
   sort_order INT NOT NULL DEFAULT 100,
+  category VARCHAR(40) NOT NULL DEFAULT 'apartment',
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   UNIQUE KEY uniq_advantages_title (title)
@@ -103,6 +107,7 @@ CREATE TABLE IF NOT EXISTS faqs (
   answer TEXT NOT NULL,
   is_published TINYINT(1) NOT NULL DEFAULT 1,
   sort_order INT NOT NULL DEFAULT 100,
+  category VARCHAR(40) NOT NULL DEFAULT 'apartment',
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   UNIQUE KEY uniq_faqs_question (question)
@@ -121,6 +126,7 @@ CREATE TABLE IF NOT EXISTS portfolio_items (
   is_demo TINYINT(1) NOT NULL DEFAULT 0,
   is_published TINYINT(1) NOT NULL DEFAULT 1,
   sort_order INT NOT NULL DEFAULT 100,
+  category VARCHAR(40) NOT NULL DEFAULT 'apartment',
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   UNIQUE KEY uniq_portfolio_title (title)
@@ -188,11 +194,28 @@ CREATE TABLE IF NOT EXISTS leads (
   status VARCHAR(40) NOT NULL DEFAULT 'new',
   manager_comment TEXT NULL,
   idempotency_key VARCHAR(80) NOT NULL,
+  lead_type VARCHAR(40) NOT NULL DEFAULT 'apartment',
+  work_start VARCHAR(160) NULL,
+  has_project VARCHAR(80) NULL,
+  premise_condition VARCHAR(160) NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   INDEX idx_leads_created (created_at),
   INDEX idx_leads_phone_created (phone, created_at),
+  INDEX idx_leads_type (lead_type, created_at),
   UNIQUE KEY uniq_leads_idempotency (idempotency_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS lead_files (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  lead_id INT UNSIGNED NOT NULL,
+  stored_name VARCHAR(255) NOT NULL,
+  original_name VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(160) NULL,
+  size_bytes INT UNSIGNED NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL,
+  INDEX idx_lead_files_lead (lead_id),
+  CONSTRAINT fk_lead_files_lead FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS telegram_queue (
@@ -283,3 +306,22 @@ INSERT INTO portfolio_items (title, city, district, area, repair_type, cost, dur
 ('Пример прихожей после ремонта','','','','Прихожая','','','Иллюстративное изображение. Не является фотографией объекта, выполненного компанией КвартираФормат.',1,1,50,NOW(),NOW()),
 ('Пример семейной квартиры после ремонта','','','','Семейный интерьер','','','Иллюстративное изображение. Не является фотографией объекта, выполненного компанией КвартираФормат.',1,1,60,NOW(),NOW())
 ON DUPLICATE KEY UPDATE works=VALUES(works), is_demo=VALUES(is_demo), repair_type=VALUES(repair_type), updated_at=NOW();
+
+INSERT INTO settings (setting_key, setting_value, updated_at) VALUES
+('commercial_meta_title','Ремонт коммерческих помещений под ключ в Москве | КвартираФормат',NOW()),
+('commercial_meta_description','Ремонт коммерческих помещений в Москве и МО: офисы, магазины, салоны красоты, кафе и склады. Капитальный и косметический ремонт. Рассчитаем стоимость по смете.',NOW()),
+('commercial_h1','Ремонт коммерческих помещений под ключ в Москве и Московской области',NOW()),
+('commercial_intro','Ремонтируем офисы, магазины, салоны красоты и другие нежилые помещения в Москве и Московской области. Выполняем отделочные и комплексные ремонтные работы. Рассчитаем стоимость с учётом площади, состояния объекта и технического задания.',NOW()),
+('commercial_hub_published','1',NOW()),
+('schema_commercial_v1','1',NOW())
+ON DUPLICATE KEY UPDATE setting_key=setting_key;
+
+INSERT INTO services (title, slug, short, body, price, image_path, image_alt, meta_title, meta_description, h1, is_published, sort_order, category, created_at, updated_at) VALUES
+('Ремонт офисов под ключ','remont-ofisov','Капитальный и косметический ремонт офисных помещений. Перегородки, полы, потолки, стены, электромонтаж и внутренняя отделка.','<p>Для собственника или арендатора офиса важны не рекламные обещания, а понятный объём работ. Смета появляется после осмотра и согласования технического задания.</p>',NULL,'/assets/images/commercial/office.webp','Ремонт офиса под ключ: коридор open space со стеклянными перегородками после отделки','Ремонт офисов под ключ в Москве | КвартираФормат','Капитальный и косметический ремонт офисных помещений в Москве и МО. Перегородки, отделка, электромонтаж. Рассчитаем смету по площади и ТЗ.','Ремонт офисов под ключ в Москве и Московской области',1,10,'commercial',NOW(),NOW()),
+('Ремонт магазинов и торговых помещений','remont-magazinov','Комплексная отделка магазинов, торговых площадей, шоурумов и помещений в торговых центрах.','<p>Ремонт магазина привязан к дате открытия и правилам объекта. Стоимость зависит от состояния помещения и состава чистовой отделки.</p>',NULL,'/assets/images/commercial/store.webp','Ремонт магазина под ключ: торговый зал с освещением, стеллажами и отделкой','Ремонт магазинов и торговых помещений в Москве | КвартираФормат','Комплексная отделка магазинов, шоурумов и торговых площадей в Москве и Московской области. Подготовим смету по техническому заданию.','Ремонт магазинов и торговых помещений под ключ',1,20,'commercial',NOW(),NOW()),
+('Ремонт салонов красоты','remont-salonov-krasoty','Ремонт парикмахерских, барбершопов, студий красоты и косметологических кабинетов с учётом назначения и инженерных требований.','<p>Салон требует мокрые зоны, розетки под оборудование и устойчивые покрытия. Смету считаем после осмотра.</p>',NULL,'/assets/images/commercial/salon.webp','Ремонт салона красоты под ключ: зона обслуживания с зеркалами и чистовой отделкой','Ремонт салонов красоты под ключ в Москве | КвартираФормат','Ремонт парикмахерских, барбершопов и студий красоты с учётом инженерных требований. Расчёт стоимости по площади и составу работ.','Ремонт салонов красоты под ключ в Москве',1,30,'commercial',NOW(),NOW()),
+('Ремонт кафе и ресторанов','remont-kafe-restoranov','Внутренняя отделка помещений общественного питания, работы с поверхностями и инженерными системами согласно согласованному проекту.','<p>В общепите отделка зала и служебных зон идёт по проекту. Смету готовим после осмотра, без шаблонной ставки.</p>',NULL,'/assets/images/commercial/cafe.webp','Ремонт кафе под ключ: зал общественного питания после внутренней отделки','Ремонт кафе и ресторанов в Москве | КвартираФормат','Внутренняя отделка помещений общественного питания в Москве и МО. Работы по согласованному проекту. Индивидуальный расчёт сметы.','Ремонт кафе и ресторанов под ключ',1,40,'commercial',NOW(),NOW()),
+('Ремонт складских и производственных помещений','remont-skladskih-pomescheniy','Отделочные работы, восстановление покрытий, ремонт подсобных, административных и производственных зон с учётом технического задания.','<p>На складе важны покрытие пола, свет и точное попадание в техническое задание. Универсальную цену за м² не публикуем.</p>',NULL,'/assets/images/commercial/warehouse.webp','Ремонт складского помещения: аккуратные стеллажные зоны и подготовленные покрытия','Ремонт складских и производственных помещений | КвартираФормат','Отделка и восстановление покрытий складов и производственных зон в Москве и Московской области. Смета по техническому заданию.','Ремонт складских и производственных помещений',1,50,'commercial',NOW(),NOW()),
+('Ремонт помещений свободного назначения','remont-pomescheniy-svobodnogo-naznacheniya','Подготовка коммерческих помещений к открытию бизнеса, перепланировке и дальнейшему использованию в рамках согласованного проекта.','<p>ПСН часто приходит как коробка. Состав работ зависит от будущего сценария использования и наличия проекта.</p>',NULL,'/assets/images/commercial/free-purpose.webp','Ремонт помещения свободного назначения: светлый коммерческий объём со стеклянными перегородками','Ремонт помещений свободного назначения в Москве | КвартираФормат','Подготовка коммерческих помещений свободного назначения к открытию бизнеса. Отделка, перепланировка в рамках согласованного проекта.','Ремонт помещений свободного назначения',1,60,'commercial',NOW(),NOW())
+ON DUPLICATE KEY UPDATE slug=slug;
+

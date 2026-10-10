@@ -163,6 +163,7 @@ final class SiteImages
             self::geo('c'),
             self::geo('d'),
         ]);
+        $items = array_merge($items, array_values(CommercialCatalog::images()));
         $unique = [];
         foreach ($items as $item) {
             $unique[$item['src']] = $item;

@@ -2,6 +2,9 @@
 /storage/logs/*.log
 /storage/backups/*
 !/storage/backups/.gitkeep
+/storage/lead-files/**
+!/storage/lead-files/.gitkeep
+!/storage/lead-files/.htaccess
 /public/uploads/*
 !/public/uploads/.gitkeep
 !/public/uploads/.htaccess
