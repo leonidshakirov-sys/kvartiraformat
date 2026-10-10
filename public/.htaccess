@@ -1,0 +1,37 @@
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Canonical HTTPS/domain redirects should be enabled after SSL and domain are connected.
+# RewriteCond %{HTTPS} !=on [OR]
+# RewriteCond %{HTTP_HOST} !^kvartiraformat\.ru$ [NC]
+# RewriteRule ^ https://kvartiraformat.ru%{REQUEST_URI} [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType text/css "access plus 30 days"
+ExpiresByType application/javascript "access plus 30 days"
+ExpiresByType image/webp "access plus 180 days"
+ExpiresByType image/avif "access plus 180 days"
+ExpiresByType image/png "access plus 180 days"
+ExpiresByType image/jpeg "access plus 180 days"
+</IfModule>

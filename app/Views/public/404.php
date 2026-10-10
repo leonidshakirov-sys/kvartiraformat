@@ -1,0 +1,1 @@
+<section class="page-hero"><div class="container"><h1>Страница не найдена</h1><p>Возможно, адрес изменился или страница ещё не опубликована.</p><a class="btn btn-primary" href="/">Вернуться на главную</a></div></section>

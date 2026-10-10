@@ -1,0 +1,1 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title><?= e($metaTitle ?? '') ?></title><link rel="stylesheet" href="<?= asset('css/styles.css') ?>"></head><body class="auth-page"><main class="auth-card"><?= $content ?></main></body></html>

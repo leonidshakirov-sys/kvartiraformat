@@ -1,0 +1,13 @@
+Photographs are used under the Unsplash License and Pexels License (free commercial use, no attribution required).
+They are illustrative interiors and renovation scenes, not photographs of KvartiraFormat completed objects.
+
+Commercial library (/public/assets/images/commercial/):
+- hero.webp — Unsplash photo-1497366811353-6870744d04b2, modern commercial meeting room
+- office.webp — Unsplash photo-1497366216548-37526070297c, office corridor after fit-out
+- store.webp — Unsplash photo-1441986300917-64674bd600d8, finished retail shop
+- salon.webp — Unsplash photo-1633681926022-84c23e8cb2d6, beauty salon interior
+- cafe.webp — Unsplash photo-1554118811-1e0d58224f24, cafe interior
+- warehouse.webp — Unsplash photo-1586528116311-ad8dd3c8310d, warehouse / storage hall
+- free-purpose.webp — Unsplash photo-1497366412874-3415097a27e7, flexible commercial space
+- process.webp — Unsplash photo-1541888946425-d81bb19240f5, construction / site works
+Do not present these images as completed KvartiraFormat objects.
