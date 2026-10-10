@@ -66,32 +66,68 @@ final class TelegramService
         if (!$this->isConfigured()) {
             return ['ok' => false, 'error' => 'Telegram не настроен'];
         }
-        $token = (string)$this->config->get('telegram.bot_token');
-        $chatId = (string)$this->config->get('telegram.chat_id');
-        $url = 'https://api.telegram.org/bot' . rawurlencode($token) . '/sendMessage';
-        $payload = http_build_query([
+        $token = trim((string)$this->config->get('telegram.bot_token'));
+        $chatId = trim((string)$this->config->get('telegram.chat_id'));
+        $url = 'https://api.telegram.org/bot' . $token . '/sendMessage';
+        $payload = [
             'chat_id' => $chatId,
             'text' => $message,
             'parse_mode' => 'HTML',
             'disable_web_page_preview' => '1',
-        ]);
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
-                'content' => $payload,
-                'timeout' => (int)$this->config->get('telegram.timeout', 6),
-                'ignore_errors' => true,
-            ],
-        ]);
-        $response = @file_get_contents($url, false, $context);
-        if ($response === false) {
-            return ['ok' => false, 'error' => 'Не удалось подключиться к Telegram Bot API'];
+        ];
+        $timeout = max(5, (int)$this->config->get('telegram.timeout', 15));
+        $response = $this->post($url, $payload, $timeout);
+        if ($response['body'] === null) {
+            return ['ok' => false, 'error' => $response['error'] ?: 'Не удалось подключиться к Telegram Bot API'];
         }
-        $decoded = json_decode($response, true);
+        $decoded = json_decode((string)$response['body'], true);
         if (!is_array($decoded) || empty($decoded['ok'])) {
             return ['ok' => false, 'error' => $decoded['description'] ?? 'Telegram вернул ошибку'];
         }
         return ['ok' => true, 'error' => null];
+    }
+
+    /**
+     * @param array<string, string> $payload
+     * @return array{body: ?string, error: ?string}
+     */
+    private function post(string $url, array $payload, int $timeout): array
+    {
+        if (function_exists('curl_init')) {
+            $curl = curl_init($url);
+            if ($curl === false) {
+                return ['body' => null, 'error' => 'Не удалось инициализировать curl'];
+            }
+            curl_setopt_array($curl, [
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => $timeout,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_SSL_VERIFYPEER => true,
+            ]);
+            $body = curl_exec($curl);
+            $error = curl_error($curl);
+            curl_close($curl);
+            if ($body === false) {
+                return ['body' => null, 'error' => $error !== '' ? ('Telegram: ' . $error) : 'Не удалось подключиться к Telegram Bot API'];
+            }
+            return ['body' => (string)$body, 'error' => null];
+        }
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
+                'content' => http_build_query($payload),
+                'timeout' => $timeout,
+                'ignore_errors' => true,
+            ],
+        ]);
+        $body = @file_get_contents($url, false, $context);
+        if ($body === false) {
+            return ['body' => null, 'error' => 'Не удалось подключиться к Telegram Bot API. На Beget исходящие запросы к api.telegram.org могут быть ограничены.'];
+        }
+        return ['body' => $body, 'error' => null];
     }
 }
