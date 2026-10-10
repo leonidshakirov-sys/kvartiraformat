@@ -292,12 +292,18 @@ final class SiteRepository
     {
         foreach ($rows as &$row) {
             $question = (string)($row['q'] ?? '');
+            $answer = (string)($row['a'] ?? '');
+            $best = null;
+            $bestScore = 0.0;
             foreach ($this->seed['faqs'] as $faq) {
-                $seedQuestion = (string)$faq['q'];
-                if ($seedQuestion === $question || mb_stripos($seedQuestion, mb_substr($question, 0, 28)) !== false || mb_stripos($question, mb_substr($seedQuestion, 0, 28)) !== false) {
-                    $row['a'] = $faq['a'];
-                    break;
+                similar_text($question, (string)$faq['q'], $percent);
+                if ($percent > $bestScore) {
+                    $bestScore = $percent;
+                    $best = (string)$faq['a'];
                 }
+            }
+            if ($best && ($bestScore >= 55 || preg_match('/админ/ui', $answer))) {
+                $row['a'] = $best;
             }
         }
         unset($row);

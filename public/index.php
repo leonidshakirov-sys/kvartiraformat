@@ -16,6 +16,14 @@ use App\Services\LeadService;
 use App\Services\TelegramService;
 use App\Services\UploadService;
 
+if (PHP_SAPI === 'cli-server') {
+    $staticPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    $staticFile = __DIR__ . $staticPath;
+    if ($staticPath !== '/' && is_file($staticFile)) {
+        return false;
+    }
+}
+
 $root = dirname(__DIR__);
 require $root . '/app/bootstrap.php';
 
