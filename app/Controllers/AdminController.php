@@ -85,7 +85,7 @@ final class AdminController
             match ($action) {
                 'save_settings' => $this->saveSettings($request),
                 'save_page' => $this->repo->upsertPage($request->post()),
-                'save_service' => $this->repo->upsertService($request->post()),
+                'save_service' => $this->saveService($request),
                 'save_geo' => $this->repo->upsertGeo($request->post()),
                 'save_tariff' => $this->saveTariff($request),
                 'save_faq' => $this->saveFaq($request),
@@ -177,6 +177,7 @@ final class AdminController
             'portfolio' => $this->repo->portfolio(),
             'tariffs' => $this->repo->tariffs(),
             'telegramConfigured' => $this->telegram->isConfigured(),
+            'media' => $this->repo->media(),
             'dbError' => $this->repo->dbError(),
         ];
     }
@@ -228,12 +229,35 @@ final class AdminController
         $stmt->execute([$request->input('title'), $request->input('text'), (int)$request->input('is_published', 1), (int)$request->input('sort_order', 100)]);
     }
 
+    private function saveService(Request $request): void
+    {
+        $data = $request->post();
+        if (!empty($_FILES['image']['tmp_name'])) {
+            $result = $this->uploads->handle($_FILES['image'], 'services');
+            if (!$result['ok']) {
+                throw new \RuntimeException($result['error']);
+            }
+            $data['image_path'] = $result['path'];
+        }
+        $this->repo->upsertService($data);
+    }
+
     private function savePortfolio(Request $request): void
     {
         $pdo = $this->repo->pdo();
-        if (!$pdo) throw new \RuntimeException('База данных не настроена.');
+        if (!$pdo) {
+            throw new \RuntimeException('База данных не настроена.');
+        }
         $stmt = $pdo->prepare('INSERT INTO portfolio_items (title, city, district, area, repair_type, cost, duration, works, is_demo, is_published, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
         $stmt->execute([$request->input('title'), $request->input('city'), $request->input('district'), $request->input('area'), $request->input('repair_type'), $request->input('cost'), $request->input('duration'), $request->input('works'), (int)$request->input('is_demo', 0), (int)$request->input('is_published', 1), (int)$request->input('sort_order', 100)]);
+        $id = (int)$pdo->lastInsertId();
+        if ($id > 0 && !empty($_FILES['image']['tmp_name'])) {
+            $result = $this->uploads->handle($_FILES['image'], 'portfolio');
+            if (!$result['ok']) {
+                throw new \RuntimeException($result['error']);
+            }
+            $this->repo->attachPortfolioImage($id, $result['path'], (string)$request->input('image_alt', ''), 'gallery');
+        }
     }
 
     private function updateLead(Request $request): void

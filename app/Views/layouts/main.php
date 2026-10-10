@@ -12,6 +12,11 @@
     <meta property="og:description" content="<?= e($metaDescription ?? '') ?>">
     <meta property="og:url" content="<?= e($canonicalUrl) ?>">
     <meta property="og:site_name" content="КвартираФормат">
+    <meta property="og:image" content="<?= e('https://' . ($s['domain'] ?? 'kvartiraformat.ru') . ($ogImage ?? '/assets/images/hero/living-room.webp')) ?>">
+    <meta property="og:image:alt" content="Современный интерьер квартиры после ремонта">
+    <?php if (!empty($preloadImage)): ?>
+        <link rel="preload" as="image" href="<?= e($preloadImage) ?>" type="image/webp">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
     <script defer src="<?= asset('js/app.js') ?>"></script>
     <?php if (!empty($s['ym_counter_id'])): ?>
@@ -25,6 +30,7 @@
         'telephone' => $s['phone'] ?? '',
         'address' => ['@type' => 'PostalAddress', 'streetAddress' => $s['office_address'] ?? '', 'addressLocality' => 'Москва', 'addressCountry' => 'RU'],
         'areaServed' => $s['service_area'] ?? '',
+        'image' => 'https://' . ($s['domain'] ?? 'kvartiraformat.ru') . '/assets/images/hero/living-room.webp',
         'url' => 'https://' . ($s['domain'] ?? 'kvartiraformat.ru'),
         'legalName' => $s['legal_name'] ?? '',
         'taxID' => $s['inn'] ?? '',

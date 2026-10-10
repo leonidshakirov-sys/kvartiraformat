@@ -1,1 +1,14 @@
-<section class="page-hero"><div class="container"><nav class="breadcrumbs"><a href="/">Главная</a><span>Портфолио</span></nav><h1><?= e($h1) ?></h1><p>Карточки объектов управляются из административной панели. Демонстрационные примеры не выдаются за реальные выполненные работы.</p></div></section><section class="section"><div class="container"><div class="portfolio-grid"><?php foreach ($portfolio as $item): ?><article class="portfolio-card"><div class="before-after" data-before-after><div class="before">До</div><div class="after">После</div><input type="range" min="10" max="90" value="50"></div><?php if(!empty($item['is_demo'])): ?><span class="badge">Демонстрационный пример</span><?php endif; ?><h2><?= e($item['title']) ?></h2><dl><dt>Город</dt><dd><?= e($item['city'] ?? '') ?></dd><dt>Район или ЖК</dt><dd><?= e($item['district'] ?? '') ?></dd><dt>Площадь</dt><dd><?= e($item['area'] ?? '') ?></dd><dt>Вид ремонта</dt><dd><?= e($item['repair_type'] ?? '') ?></dd><dt>Стоимость</dt><dd><?= e($item['cost'] ?? '') ?></dd><dt>Срок</dt><dd><?= e($item['duration'] ?? '') ?></dd></dl><p><?= e($item['works'] ?? '') ?></p></article><?php endforeach; ?></div></div></section>
+<section class="page-hero">
+    <div class="container">
+        <nav class="breadcrumbs"><a href="/">Главная</a><span>Портфолио</span></nav>
+        <h1><?= e($h1) ?></h1>
+        <p>Пока нет фотографий выполненных объектов, здесь собраны иллюстративные интерьеры после ремонта. Они помогают понять уровень отделки и не выдаются за работы компании.</p>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+        <div class="portfolio-grid">
+            <?php foreach ($portfolio as $index => $item): $headingTag = 'h2'; require __DIR__ . '/../partials/portfolio-card.php'; endforeach; ?>
+        </div>
+    </div>
+</section>
