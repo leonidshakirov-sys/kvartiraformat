@@ -223,8 +223,8 @@ final class SiteImages
                 'page' => ['src' => '/assets/images/services/capital-page.webp', 'alt' => 'Черновые и отделочные работы при капитальном ремонте', 'width' => 1600, 'height' => 900],
             ],
             'kosmeticheskiy-remont' => [
-                'card' => ['src' => '/assets/images/services/cosmetic.webp', 'alt' => 'Косметический ремонт светлой комнаты', 'width' => 1200, 'height' => 840],
-                'page' => ['src' => '/assets/images/services/cosmetic-page.webp', 'alt' => 'Обновлённая гостиная после косметического ремонта', 'width' => 1600, 'height' => 900],
+                'card' => ['src' => '/assets/images/services/cosmetic.webp', 'alt' => 'Покраска стен при косметическом ремонте', 'width' => 1200, 'height' => 840],
+                'page' => ['src' => '/assets/images/services/cosmetic-page.webp', 'alt' => 'Обычная квартира после косметического обновления', 'width' => 1600, 'height' => 900],
             ],
             'dizaynerskiy-remont' => [
                 'card' => ['src' => '/assets/images/services/designer.webp', 'alt' => 'Дизайнерский ремонт квартиры', 'width' => 1200, 'height' => 840],

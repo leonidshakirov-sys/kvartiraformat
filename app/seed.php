@@ -8,7 +8,7 @@ return [
     'settings' => [
         'brand_name' => 'КвартираФормат',
         'brand_name_full' => 'КВАРТИРАФОРМАТ',
-        'brand_tagline' => 'Ремонт квартир под ключ',
+        'brand_tagline' => 'Ремонт квартир, домов и коммерции',
         'service_area' => 'Москва и Московская область',
         'legal_name' => 'ИП Шакиров Леонид Альбертович',
         'inn' => '772607203680',
@@ -35,7 +35,7 @@ return [
     'services' => [
         ['slug' => 'remont-kvartir-pod-klyuch', 'title' => 'Ремонт квартир под ключ', 'short' => 'Комплексный ремонт квартиры от подготовки основания до финальной отделки.', 'price' => $startPrices['remont-kvartir-pod-klyuch'], 'image_path' => '/assets/images/services/turnkey.webp', 'image_alt' => 'Ремонт квартиры под ключ в Москве'],
         ['slug' => 'kapitalnyy-remont', 'title' => 'Капитальный ремонт', 'short' => 'Глубокое обновление квартиры с инженерными работами и заменой отделки.', 'price' => $startPrices['kapitalnyy-remont'], 'image_path' => '/assets/images/services/capital.webp', 'image_alt' => 'Капитальный ремонт квартиры'],
-        ['slug' => 'kosmeticheskiy-remont', 'title' => 'Косметический ремонт', 'short' => 'Обновление финишных покрытий, стен, пола и потолков без полной перепланировки.', 'price' => $startPrices['kosmeticheskiy-remont'], 'image_path' => '/assets/images/services/cosmetic.webp', 'image_alt' => 'Косметический ремонт светлой комнаты'],
+        ['slug' => 'kosmeticheskiy-remont', 'title' => 'Косметический ремонт', 'short' => 'Обновление финишных покрытий, стен, пола и потолков без полной перепланировки.', 'price' => $startPrices['kosmeticheskiy-remont'], 'image_path' => '/assets/images/services/cosmetic.webp', 'image_alt' => 'Покраска стен при косметическом ремонте'],
         ['slug' => 'dizaynerskiy-remont', 'title' => 'Дизайнерский ремонт', 'short' => 'Ремонт с проработанными решениями по стилю, свету и материалам.', 'price' => $startPrices['dizaynerskiy-remont'], 'image_path' => '/assets/images/services/designer.webp', 'image_alt' => 'Дизайнерский ремонт квартиры'],
         ['slug' => 'remont-novostroek', 'title' => 'Ремонт квартир в новостройках', 'short' => 'Отделка квартир без отделки или с предчистовой подготовкой.', 'price' => $startPrices['remont-novostroek'], 'image_path' => '/assets/images/services/newbuild.webp', 'image_alt' => 'Ремонт квартиры в новостройке'],
         ['slug' => 'remont-vtorichnogo-zhilya', 'title' => 'Ремонт вторичного жилья', 'short' => 'Обновление квартир во вторичном фонде с демонтажом старой отделки.', 'price' => $startPrices['remont-vtorichnogo-zhilya'], 'image_path' => '/assets/images/services/secondary.webp', 'image_alt' => 'Ремонт вторичного жилья'],

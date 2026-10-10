@@ -47,7 +47,7 @@ $processImage = $processImage ?? $heroImage;
         </ol>
     </div>
 </section>
-<?php require __DIR__ . '/../partials/calculator-commercial.php'; ?>
+<?php $calcLeadType = 'commercial'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section">
     <div class="container">
         <div class="section-head">

@@ -17,6 +17,7 @@ use App\Services\MailNotifyService;
 use App\Services\TelegramService;
 use App\Services\UploadService;
 use App\Support\CommercialCatalog;
+use App\Support\HouseCatalog;
 
 if (PHP_SAPI === 'cli-server') {
     $staticPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
@@ -79,7 +80,10 @@ try {
         $path === '/' => $public->home(),
         $path === '/contacts' || $path === '/contacts/' => $public->contacts(),
         $path === '/portfolio' || $path === '/portfolio/' => $public->portfolio(),
+        $pathNoSlash === 'remont-kvartir' => $public->apartmentHub(),
+        $pathNoSlash === HouseCatalog::HUB_SLUG => $public->houseHub(),
         $pathNoSlash === CommercialCatalog::HUB_SLUG => $public->commercialHub(),
+        HouseCatalog::isServiceSlug($pathNoSlash) => $public->houseService($pathNoSlash),
         CommercialCatalog::isServiceSlug($pathNoSlash) => $public->commercialService($pathNoSlash),
         in_array($pathNoSlash, ['privacy-policy', 'personal-data-consent', 'cookies'], true) => $public->legal($pathNoSlash),
         preg_match('#^uslugi/([a-z0-9-]+)/?$#', $pathNoSlash, $m) === 1 => $public->service($m[1]),

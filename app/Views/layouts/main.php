@@ -42,7 +42,7 @@
         '@context' => 'https://schema.org',
         '@type' => 'HomeAndConstructionBusiness',
         'name' => $s['brand_name'] ?? 'КвартираФормат',
-        'description' => 'Ремонт квартир под ключ в Москве и Московской области',
+        'description' => 'Ремонт квартир, домов и коммерческих помещений под ключ в Москве и Московской области',
         'telephone' => $s['phone'] ?? '',
         'address' => ['@type' => 'PostalAddress', 'streetAddress' => $s['office_address'] ?? '', 'addressLocality' => 'Москва', 'addressCountry' => 'RU'],
         'areaServed' => $s['service_area'] ?? '',
@@ -55,19 +55,42 @@
 <body>
 <header class="site-header">
     <div class="container header-row">
-        <a class="logo" href="/" aria-label="КвартираФормат — главная"><span>КВАРТИРА</span><b>ФОРМАТ</b><small><?= e($s['brand_tagline'] ?? 'Ремонт квартир под ключ') ?></small></a>
+        <a class="logo" href="/" aria-label="КвартираФормат — главная"><span>КВАРТИРА</span><b>ФОРМАТ</b><small><?= e($s['brand_tagline'] ?? 'Ремонт квартир, домов и коммерции') ?></small></a>
         <button class="nav-toggle" type="button" data-nav-toggle aria-label="Открыть меню">☰</button>
         <nav class="nav" data-nav>
+            <a href="/">Главная</a>
             <div class="nav-item has-menu">
-                <button class="nav-link" type="button" data-submenu-toggle>Услуги</button>
+                <a class="nav-link" href="/remont-kvartir/">Ремонт квартир</a>
+                <button class="nav-more" type="button" data-submenu-toggle aria-label="Категории ремонта квартир">▾</button>
                 <div class="nav-submenu">
-                    <a href="/#services">Ремонт квартир</a>
-                    <a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a>
+                    <a href="/remont-kvartir/">Все услуги</a>
+                    <a href="/uslugi/kosmeticheskiy-remont/">Косметический</a>
+                    <a href="/uslugi/kapitalnyy-remont/">Капитальный</a>
+                    <a href="/uslugi/remont-kvartir-pod-klyuch/">Под ключ</a>
+                </div>
+            </div>
+            <div class="nav-item has-menu">
+                <a class="nav-link" href="/remont-domov/">Ремонт домов</a>
+                <button class="nav-more" type="button" data-submenu-toggle aria-label="Категории ремонта домов">▾</button>
+                <div class="nav-submenu">
+                    <a href="/remont-domov/">Все услуги</a>
+                    <a href="/remont-domov-pod-klyuch/">Дома под ключ</a>
+                    <a href="/kapitalnyy-remont-domov/">Капитальный</a>
+                    <a href="/remont-taunhausov/">Таунхаусы</a>
+                </div>
+            </div>
+            <div class="nav-item has-menu">
+                <a class="nav-link" href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a>
+                <button class="nav-more" type="button" data-submenu-toggle aria-label="Категории коммерческого ремонта">▾</button>
+                <div class="nav-submenu">
+                    <a href="/remont-kommercheskih-pomescheniy/">Все услуги</a>
+                    <a href="/remont-ofisov/">Офисы</a>
+                    <a href="/remont-magazinov/">Магазины</a>
+                    <a href="/remont-kafe-restoranov/">Кафе</a>
                 </div>
             </div>
             <a href="/#prices">Цены</a>
-            <a href="/portfolio/">Портфолио</a>
-            <a href="/#about">О компании</a>
+            <a href="/portfolio/">Наши работы</a>
             <a href="/contacts/">Контакты</a>
         </nav>
         <a class="header-phone" data-goal="phone_click" href="<?= e($s['phone_href'] ?? 'tel:+79162659262') ?>"><?= e($s['phone'] ?? '+7 (916) 265-92-62') ?></a>
@@ -77,9 +100,9 @@
 <main><?= $content ?></main>
 <footer class="site-footer">
     <div class="container footer-grid">
-        <div><a class="logo logo-footer" href="/"><span>КВАРТИРА</span><b>ФОРМАТ</b><small>Ремонт квартир под ключ</small></a><p>Москва и Московская область. Комплексный ремонт квартир, апартаментов и вторичного жилья.</p></div>
-        <div><h3>Разделы</h3><a href="/#services">Ремонт квартир</a><a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a><a href="/#prices">Цены</a><a href="/portfolio/">Портфолио</a><a href="/contacts/">Контакты</a></div>
-        <div><h3>Коммерческий ремонт</h3><a href="/remont-ofisov/">Офисы</a><a href="/remont-magazinov/">Магазины</a><a href="/remont-salonov-krasoty/">Салоны красоты</a><a href="/remont-kafe-restoranov/">Кафе и рестораны</a><a href="/remont-skladskih-pomescheniy/">Склады</a><a href="/remont-pomescheniy-svobodnogo-naznacheniya/">Свободное назначение</a></div>
+        <div><a class="logo logo-footer" href="/"><span>КВАРТИРА</span><b>ФОРМАТ</b><small>Квартиры, дома, коммерция</small></a><p>Москва и Московская область. Ремонт квартир, частных домов и коммерческих помещений.</p></div>
+        <div><h3>Направления</h3><a href="/remont-kvartir/">Ремонт квартир</a><a href="/remont-domov/">Ремонт домов</a><a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a><a href="/#prices">Цены</a><a href="/portfolio/">Наши работы</a><a href="/contacts/">Контакты</a></div>
+        <div><h3>Популярные услуги</h3><a href="/uslugi/remont-kvartir-pod-klyuch/">Квартиры под ключ</a><a href="/remont-domov-pod-klyuch/">Дома под ключ</a><a href="/remont-ofisov/">Офисы</a><a href="/remont-magazinov/">Магазины</a><a href="/remont-taunhausov/">Таунхаусы</a></div>
         <div><h3>Реквизиты</h3><p><?= e($s['legal_name'] ?? '') ?><br>ИНН <?= e($s['inn'] ?? '') ?><br><a href="<?= e($s['phone_href'] ?? '') ?>"><?= e($s['phone'] ?? '') ?></a><br><?= e($s['office_address'] ?? '') ?></p></div>
         <div><h3>Документы</h3><a href="/privacy-policy/">Политика обработки персональных данных</a><a href="/personal-data-consent/">Согласие на обработку персональных данных</a><a href="/cookies/">Cookies</a></div>
     </div>

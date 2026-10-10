@@ -24,6 +24,7 @@ final class SchemaMigrator
             if (!self::hasCommercialServices($pdo)) {
                 self::seedCommercial($pdo);
             }
+            self::ensureHouses($pdo);
             return;
         }
 
@@ -42,6 +43,78 @@ final class SchemaMigrator
         self::ensureLeadFiles($pdo);
         self::seedCommercial($pdo);
         self::touchSetting($pdo, self::VERSION_KEY, '1');
+        self::ensureHouses($pdo);
+    }
+
+    private static function ensureHouses(PDO $pdo): void
+    {
+        if (!self::columnExists($pdo, 'services', 'category')) {
+            return;
+        }
+        if (!self::hasSetting($pdo, 'schema_houses_v1') || !self::hasHouseServices($pdo)) {
+            self::seedHouses($pdo);
+            self::touchSetting($pdo, 'schema_houses_v1', '1');
+        }
+        self::ensureColumn($pdo, 'repair_tariffs', 'is_approved', 'TINYINT(1) NOT NULL DEFAULT 1');
+        self::ensureColumn($pdo, 'repair_tariffs', 'includes_materials', 'TINYINT(1) NOT NULL DEFAULT 0');
+        self::ensureColumn($pdo, 'repair_tariffs', 'works_list', 'TEXT NULL');
+        self::ensureColumn($pdo, 'repair_tariffs', 'approved_at', 'DATETIME NULL');
+    }
+
+    private static function hasHouseServices(PDO $pdo): bool
+    {
+        if (!self::columnExists($pdo, 'services', 'category')) {
+            return false;
+        }
+        $count = (int)$pdo->query("SELECT COUNT(*) FROM services WHERE category = 'house'")->fetchColumn();
+        return $count > 0;
+    }
+
+    private static function seedHouses(PDO $pdo): void
+    {
+        $stmt = $pdo->prepare('INSERT INTO services (title, slug, short, body, price, image_path, image_alt, meta_title, meta_description, h1, is_published, sort_order, category, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, 1, ?, \'house\', NOW(), NOW()) ON DUPLICATE KEY UPDATE slug = slug');
+        foreach (HouseCatalog::services() as $service) {
+            $stmt->execute([
+                $service['title'],
+                $service['slug'],
+                $service['short'],
+                $service['body'],
+                $service['image_path'],
+                $service['image_alt'],
+                $service['meta_title'],
+                $service['meta_description'],
+                $service['h1'],
+                (int)$service['sort_order'],
+            ]);
+        }
+
+        if (self::columnExists($pdo, 'faqs', 'category')) {
+            $faq = $pdo->prepare('INSERT INTO faqs (question, answer, is_published, sort_order, category, created_at, updated_at) VALUES (?, ?, 1, ?, \'house\', NOW(), NOW()) ON DUPLICATE KEY UPDATE question = question');
+            foreach (HouseCatalog::faqs() as $i => $item) {
+                $faq->execute([$item['q'], $item['a'], ($i + 1) * 10]);
+            }
+        }
+
+        if (self::columnExists($pdo, 'advantages', 'category')) {
+            $adv = $pdo->prepare('INSERT INTO advantages (title, text, is_published, sort_order, category, created_at, updated_at) VALUES (?, ?, 1, ?, \'house\', NOW(), NOW()) ON DUPLICATE KEY UPDATE title = title');
+            foreach (HouseCatalog::advantages() as $i => $item) {
+                $adv->execute([$item['title'], $item['text'], ($i + 1) * 10]);
+            }
+        }
+
+        $hub = HouseCatalog::hub();
+        foreach ([
+            'house_meta_title' => $hub['meta_title'],
+            'house_meta_description' => $hub['meta_description'],
+            'house_h1' => $hub['h1'],
+            'house_intro' => $hub['intro'],
+            'house_hub_published' => '1',
+            'apartment_hub_published' => '1',
+        ] as $key => $value) {
+            if (!self::hasSetting($pdo, $key)) {
+                self::touchSetting($pdo, $key, $value);
+            }
+        }
     }
 
     private static function backup(PDO $pdo): void

@@ -25,10 +25,10 @@ function route_url(string $path = ''): string
     return '/' . ltrim($path, '/');
 }
 
-function format_price(?int $price): string
+function format_price(?int $price, bool $approved = true): string
 {
-    if (!$price || $price <= 0) {
-        return 'По расчёту';
+    if (!$approved || !$price || $price <= 0) {
+        return 'Индивидуальный расчёт';
     }
     return 'от ' . number_format($price, 0, ',', ' ') . ' ₽/м²';
 }

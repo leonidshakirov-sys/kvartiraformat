@@ -1,66 +1,107 @@
 <?php
+use App\Support\CommercialCatalog;
+use App\Support\HouseCatalog;
 use App\Support\SiteImages;
 $heroImage = SiteImages::hero();
 $priceImage = SiteImages::prices();
+$houseServices = $houseServices ?? [];
+$commercialServices = $commercialServices ?? [];
+$commercialTariffs = $commercialTariffs ?? [];
 ?>
 <section class="hero">
     <div class="hero-media"><?= picture($heroImage, '', 'eager') ?></div>
     <div class="container hero-content">
         <span class="eyebrow">Москва и Московская область</span>
         <h1><?= e($h1) ?></h1>
-        <p class="lead">Косметический, капитальный и дизайнерский ремонт квартир. Рассчитаем стоимость, подготовим смету и проведём работы от черновой отделки до готового интерьера.</p>
+        <p class="lead">Выполняем косметический, капитальный и комплексный ремонт жилых и коммерческих объектов. Подготовим смету с учётом площади, состояния помещения и ваших пожеланий.</p>
         <div class="hero-actions">
             <a class="btn btn-primary" href="#calculator">Рассчитать стоимость</a>
-            <a class="btn btn-outline" href="#lead-form">Заказать замер</a>
-            <a class="btn btn-ghost" href="/portfolio/">Примеры интерьеров</a>
+            <a class="btn btn-outline" href="#directions">Наши услуги</a>
+            <a class="btn btn-ghost" href="#lead-form">Получить консультацию</a>
         </div>
-        <ul class="hero-points">
-            <li>Стартовые цены на сайте, точная смета после замера</li>
-            <li>Работаем с новостройками и вторичным жильём</li>
-            <li>Ремонт квартир и коммерческих помещений под ключ</li>
-        </ul>
     </div>
 </section>
-<?php require __DIR__ . '/../partials/calculator.php'; ?>
-<section class="section section-muted" id="services">
+<section class="section section-surface" id="directions">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Виды ремонта</span>
-            <h2>Ремонт квартир под ваши задачи</h2>
-            <p>Выберите подходящий формат: от косметического обновления до комплексного ремонта под ключ. На каждой странице — состав работ и заявка на расчёт.</p>
+            <span class="eyebrow">Направления</span>
+            <h2>Три равнозначных направления ремонта</h2>
+            <p>Компания работает с квартирами, частными домами и коммерческими помещениями. Выберите направление — внутри есть услуги, фотографии и форма расчёта.</p>
+        </div>
+        <div class="direction-grid">
+            <a class="direction-card" href="/remont-kvartir/">
+                <div class="media-frame"><?= picture(SiteImages::hero()) ?></div>
+                <div class="direction-body">
+                    <h3>Ремонт квартир</h3>
+                    <p>Новостройки и вторичное жильё: косметический, капитальный и ремонт под ключ.</p>
+                    <span class="btn btn-small">Перейти</span>
+                </div>
+            </a>
+            <a class="direction-card" href="/remont-domov/">
+                <div class="media-frame"><?= picture(HouseCatalog::image('hero')) ?></div>
+                <div class="direction-body">
+                    <h3>Ремонт домов</h3>
+                    <p>Внутренняя отделка частных домов, коттеджей и таунхаусов. Смета после осмотра.</p>
+                    <span class="btn btn-small">Перейти</span>
+                </div>
+            </a>
+            <a class="direction-card" href="/remont-kommercheskih-pomescheniy/">
+                <div class="media-frame"><?= picture(CommercialCatalog::image('hero')) ?></div>
+                <div class="direction-body">
+                    <h3>Коммерческий ремонт</h3>
+                    <p>Офисы, магазины, салоны, кафе и склады. Расчёт по площади и техническому заданию.</p>
+                    <span class="btn btn-small">Перейти</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+<?php $calcLeadType = 'apartment'; require __DIR__ . '/../partials/calculator.php'; ?>
+<section class="section section-muted" id="apartments">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Квартиры</span>
+            <h2>Ремонт квартир под ключ</h2>
+            <p>Выполняем ремонт квартир в новостройках и вторичном жилье: от косметического обновления до капитального ремонта с заменой инженерных коммуникаций и чистовой отделкой.</p>
         </div>
         <div class="cards service-cards">
-            <?php foreach ($services as $service): $card = $service; $cardImage = SiteImages::serviceCard($service); $cardHref = '/uslugi/' . $service['slug'] . '/'; $cardCalcHref = '#calculator'; require __DIR__ . '/../partials/service-card.php'; endforeach; ?>
+            <?php foreach ($services as $service): $card = $service; $cardImage = SiteImages::serviceCard($service); $cardHref = '/uslugi/' . $service['slug'] . '/'; $cardCalcHref = '/uslugi/' . $service['slug'] . '/#calculator'; require __DIR__ . '/../partials/service-card.php'; endforeach; ?>
         </div>
+        <a class="btn btn-outline" href="/remont-kvartir/">Все услуги по квартирам</a>
     </div>
 </section>
-<section class="section section-surface commercial-home" id="commercial">
+<section class="section section-surface" id="houses">
     <div class="container">
-        <div class="commercial-spotlight">
-            <div class="media-frame commercial-photo">
-                <?= picture(\App\Support\CommercialCatalog::image('hero')) ?>
-            </div>
-            <div>
-                <span class="eyebrow">Коммерческий ремонт</span>
-                <h2>Ремонт коммерческих помещений под ключ</h2>
-                <p>Офисы, магазины, салоны красоты, кафе и склады в Москве и области. Собираем смету по площади, состоянию помещения и техническому заданию.</p>
-                <div class="hero-actions">
-                    <a class="btn btn-primary" href="/remont-kommercheskih-pomescheniy/">Подробнее</a>
-                    <a class="btn btn-outline" href="/remont-kommercheskih-pomescheniy/#calculator">Рассчитать стоимость</a>
-                </div>
-            </div>
+        <div class="section-head">
+            <span class="eyebrow">Дома</span>
+            <h2>Ремонт частных домов и коттеджей под ключ</h2>
+            <p>Внутренняя отделка и комплексный ремонт частных домов, коттеджей и таунхаусов в Москве и Подмосковье. Работы от черновой подготовки до чистовой отделки помещений.</p>
         </div>
-        <div class="cards service-cards commercial-cards">
+        <div class="cards service-cards">
+            <?php foreach ($houseServices as $item): $card = $item; $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1000]; $cardHref = '/' . $item['slug'] . '/'; $cardCalcHref = '/' . $item['slug'] . '/#calculator'; require __DIR__ . '/../partials/service-card.php'; endforeach; ?>
+        </div>
+        <a class="btn btn-outline" href="/remont-domov/">Все услуги по домам</a>
+    </div>
+</section>
+<section class="section section-muted" id="commercial">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Коммерция</span>
+            <h2>Ремонт коммерческих помещений под ключ</h2>
+            <p>Офисы, магазины, салоны красоты, кафе, склады и помещения свободного назначения. Смета по площади, состоянию и техническому заданию.</p>
+        </div>
+        <div class="cards service-cards">
             <?php foreach ($commercialServices as $item): $card = $item; $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1000]; $cardHref = '/' . $item['slug'] . '/'; $cardCalcHref = '/' . $item['slug'] . '/#calculator'; require __DIR__ . '/../partials/service-card.php'; endforeach; ?>
         </div>
+        <a class="btn btn-outline" href="/remont-kommercheskih-pomescheniy/">Все коммерческие услуги</a>
     </div>
 </section>
-<section class="section section-muted" id="prices">
+<section class="section section-surface" id="prices">
     <div class="container">
         <div class="section-head">
             <span class="eyebrow">Стоимость</span>
-            <h2>Стартовые цены на ремонт</h2>
-            <p>Цены указаны «от» за квадратный метр работ. Итоговая смета зависит от состояния квартиры, состава работ и материалов и готовится после замера.</p>
+            <h2>Стоимость ремонтных работ</h2>
+            <p>Для квартир и коммерции показаны утверждённые стартовые цены «от» за м². Для домов цена не копируется с квартирного тарифа: на сайте — индивидуальный расчёт после осмотра.</p>
         </div>
         <div class="media-frame price-photo">
             <?= picture($priceImage) ?>
@@ -68,37 +109,45 @@ $priceImage = SiteImages::prices();
         <div class="price-table">
             <table>
                 <thead>
-                    <tr><th>Вид работ</th><th>Что входит</th><th>Цена за м²</th><th></th></tr>
+                    <tr><th>Направление</th><th>Вид работ</th><th>Цена</th><th></th></tr>
                 </thead>
                 <tbody>
                     <?php
                     $priceRows = [
-                        'Косметический' => 'Обновление стен, пола, потолков и отдельных элементов без капитальной переделки',
-                        'Капитальный' => 'Демонтаж, черновые работы, инженерия и финишная отделка',
-                        'Дизайнерский' => 'Комплекс работ с расширенной проработкой решений и материалов',
+                        ['Квартиры', 'Косметический', $tariffs, 'apartment', '#calculator'],
+                        ['Квартиры', 'Капитальный', $tariffs, 'apartment', '#calculator'],
+                        ['Квартиры', 'Дизайнерский', $tariffs, 'apartment', '#calculator'],
                     ];
-                    foreach ($priceRows as $type => $what):
-                        $price = 'По расчёту';
-                        foreach ($tariffs as $t) {
-                            if (($t['repair_type'] ?? '') === $type && ($t['package_type'] ?? '') === 'Только работы') {
-                                $price = format_price((int)$t['price_per_m2']);
+                    foreach ($priceRows as [$dir, $type, $list, $mode, $href]):
+                        $price = 'Индивидуальный расчёт';
+                        $approved = true;
+                        foreach ($list as $t) {
+                            if (($t['repair_type'] ?? '') === $type && (int)($t['price_per_m2'] ?? 0) > 0) {
+                                $approved = !array_key_exists('is_approved', $t) || (int)$t['is_approved'] === 1;
+                                $price = format_price((int)$t['price_per_m2'], $approved);
                                 break;
-                            }
-                        }
-                        if ($price === 'По расчёту') {
-                            foreach ($tariffs as $t) {
-                                if (($t['repair_type'] ?? '') === $type) {
-                                    $price = format_price((int)$t['price_per_m2']);
-                                    break;
-                                }
                             }
                         }
                     ?>
                         <tr>
+                            <td><?= e($dir) ?></td>
                             <td><?= e($type) ?></td>
-                            <td><?= e($what) ?></td>
                             <td><?= e($price) ?></td>
-                            <td><a class="btn btn-small" href="#calculator">Рассчитать</a></td>
+                            <td><a class="btn btn-small" href="<?= e($href) ?>">Рассчитать</a></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <tr>
+                        <td>Дома</td>
+                        <td>Внутренний ремонт и отделка</td>
+                        <td>Индивидуальный расчёт</td>
+                        <td><a class="btn btn-small" href="/remont-domov/#calculator">Рассчитать</a></td>
+                    </tr>
+                    <?php foreach (array_slice($commercialTariffs, 0, 3) as $t): ?>
+                        <tr>
+                            <td>Коммерция</td>
+                            <td><?= e($t['repair_type'] ?? '') ?></td>
+                            <td><?= e(format_price((int)($t['price_per_m2'] ?? 0), !array_key_exists('is_approved', $t) || (int)$t['is_approved'] === 1)) ?></td>
+                            <td><a class="btn btn-small" href="/remont-kommercheskih-pomescheniy/#calculator">Рассчитать</a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -109,7 +158,7 @@ $priceImage = SiteImages::prices();
 <section class="section section-dark" id="about">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Почему выбирают нас</span>
+            <span class="eyebrow">Преимущества компании</span>
             <h2>Прозрачный процесс и понятная смета</h2>
         </div>
         <div class="feature-grid">
@@ -127,7 +176,7 @@ $priceImage = SiteImages::prices();
         <div class="section-head">
             <span class="eyebrow">Наши работы</span>
             <h2>Примеры интерьеров после ремонта</h2>
-            <p>Показываем качественные интерьерные фото как ориентир по стилю. Когда появятся съёмки выполненных объектов, заменим иллюстрации реальными работами.</p>
+            <p>Показываем качественные интерьерные фото как ориентир по стилю. Это иллюстрации, а не съёмка объектов компании. Когда появятся реальные фотографии, заменим их в админ-панели.</p>
         </div>
         <div class="portfolio-grid">
             <?php foreach ($portfolio as $index => $item): $headingTag = 'h3'; require __DIR__ . '/../partials/portfolio-card.php'; endforeach; ?>
@@ -138,7 +187,7 @@ $priceImage = SiteImages::prices();
 <section class="section section-surface">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Этапы</span>
+            <span class="eyebrow">Этапы сотрудничества</span>
             <h2>Как строится работа</h2>
         </div>
         <ol class="steps">
@@ -155,9 +204,9 @@ $priceImage = SiteImages::prices();
 <section class="section section-muted" id="geo">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Где работаем</span>
+            <span class="eyebrow">География обслуживания</span>
             <h2>Москва и Московская область</h2>
-            <p>Выберите город или район, чтобы перейти на страницу с расчётом стоимости ремонта.</p>
+            <p>Городские страницы по ремонту квартир сохранены. Отдельные массовые страницы по улицам не создаём.</p>
         </div>
         <div class="geo-list">
             <?php foreach ($geoPages as $geo): ?>
@@ -169,7 +218,7 @@ $priceImage = SiteImages::prices();
 <section class="section section-surface">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">FAQ</span>
+            <span class="eyebrow">Ответы на вопросы</span>
             <h2>Ответы на частые вопросы</h2>
         </div>
         <div class="faq">
@@ -186,10 +235,10 @@ $priceImage = SiteImages::prices();
     <div class="container cta-grid">
         <div>
             <span class="eyebrow">Заявка</span>
-            <h2>Узнайте стоимость ремонта вашей квартиры</h2>
-            <p>Оставьте контакты и параметры объекта — мы свяжемся, уточним детали и подготовим индивидуальный расчёт.</p>
+            <h2>Оставьте заявку на расчёт</h2>
+            <p>Укажите контакты и при необходимости приложите план, фотографии или техническое задание.</p>
         </div>
-        <?php $formId = 'lead-form'; require __DIR__ . '/../partials/lead-form.php'; ?>
+        <?php $formId = 'lead-form'; $leadType = 'apartment'; require __DIR__ . '/../partials/lead-form.php'; ?>
     </div>
 </section>
 <section class="section section-surface contacts-mini">

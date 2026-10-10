@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Support\CommercialCatalog;
+use App\Support\HouseCatalog;
 use App\Support\SiteImages;
 use App\Support\StartingPrices;
 use PDO;
@@ -57,7 +58,11 @@ final class SiteRepository
 
     public function services(?string $category = 'apartment', bool $publishedOnly = true): array
     {
-        $fallback = $category === 'commercial' ? CommercialCatalog::services() : $this->seed['services'];
+        $fallback = match ($category) {
+            'commercial' => CommercialCatalog::services(),
+            'house' => HouseCatalog::services(),
+            default => $this->seed['services'],
+        };
         $pdo = $this->pdo();
         if (!$pdo) {
             return $fallback;
@@ -69,13 +74,13 @@ final class SiteRepository
                 $where[] = 'is_published = 1';
             }
             if ($this->hasColumn('services', 'category')) {
-                if ($category === 'commercial') {
+                if (in_array($category, ['commercial', 'house'], true)) {
                     $where[] = 'category = ?';
-                    $params[] = 'commercial';
+                    $params[] = $category;
                 } else {
                     $where[] = "(category = 'apartment' OR category IS NULL OR category = '')";
                 }
-            } elseif ($category === 'commercial') {
+            } elseif (in_array($category, ['commercial', 'house'], true)) {
                 return $fallback;
             }
             $sql = 'SELECT * FROM services' . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . ' ORDER BY sort_order, id';
@@ -84,6 +89,9 @@ final class SiteRepository
             $rows = $stmt->fetchAll();
             if ($category === 'commercial') {
                 return $this->mergeCommercialRows($rows ?: [], $publishedOnly);
+            }
+            if ($category === 'house') {
+                return $this->mergeHouseRows($rows ?: [], $publishedOnly);
             }
             $rows = $rows ?: $fallback;
             foreach ($rows as &$row) {
@@ -106,6 +114,33 @@ final class SiteRepository
             }
         }
         return null;
+    }
+
+    public function houseService(string $slug, bool $publishedOnly = true): ?array
+    {
+        $catalog = HouseCatalog::service($slug);
+        if (!$catalog) {
+            return null;
+        }
+        $pdo = $this->pdo();
+        if (!$pdo) {
+            return $catalog;
+        }
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM services WHERE slug = ? LIMIT 1');
+            $stmt->execute([$slug]);
+            $row = $stmt->fetch() ?: null;
+            if ($row && $this->hasColumn('services', 'category') && ($row['category'] ?? '') !== 'house') {
+                return null;
+            }
+            $merged = HouseCatalog::merge($row ?: null, $catalog);
+            if ($publishedOnly && isset($merged['is_published']) && (int)$merged['is_published'] === 0) {
+                return null;
+            }
+            return $merged;
+        } catch (\Throwable) {
+            return $catalog;
+        }
     }
 
     public function commercialService(string $slug, bool $publishedOnly = true): ?array
@@ -138,7 +173,7 @@ final class SiteRepository
     public function upsertService(array $data): void
     {
         $pdo = $this->requirePdo();
-        $category = in_array(($data['category'] ?? ''), ['commercial', 'apartment'], true) ? $data['category'] : 'apartment';
+        $category = in_array(($data['category'] ?? ''), ['commercial', 'apartment', 'house'], true) ? $data['category'] : 'apartment';
         $hasCategory = $this->hasColumn('services', 'category');
         if (!empty($data['id'])) {
             if ($hasCategory) {
@@ -198,7 +233,11 @@ final class SiteRepository
 
     public function faqs(?string $category = 'apartment'): array
     {
-        $fallback = $category === 'commercial' ? CommercialCatalog::faqs() : $this->seed['faqs'];
+        $fallback = match ($category) {
+            'commercial' => CommercialCatalog::faqs(),
+            'house' => HouseCatalog::faqs(),
+            default => $this->seed['faqs'],
+        };
         $pdo = $this->pdo();
         if (!$pdo) {
             return $fallback;
@@ -209,7 +248,7 @@ final class SiteRepository
                 $stmt->execute([$category]);
                 $rows = $stmt->fetchAll();
             } else {
-                $rows = $category === 'commercial' ? [] : $pdo->query('SELECT question AS q, answer AS a FROM faqs WHERE is_published = 1 ORDER BY sort_order, id')->fetchAll();
+                $rows = in_array($category, ['commercial', 'house'], true) ? [] : $pdo->query('SELECT question AS q, answer AS a FROM faqs WHERE is_published = 1 ORDER BY sort_order, id')->fetchAll();
             }
             if (!$rows) {
                 return $fallback;
@@ -222,7 +261,11 @@ final class SiteRepository
 
     public function advantages(?string $category = 'apartment'): array
     {
-        $fallback = $category === 'commercial' ? CommercialCatalog::advantages() : $this->seed['advantages'];
+        $fallback = match ($category) {
+            'commercial' => CommercialCatalog::advantages(),
+            'house' => HouseCatalog::advantages(),
+            default => $this->seed['advantages'],
+        };
         $pdo = $this->pdo();
         if (!$pdo) {
             return $fallback;
@@ -233,7 +276,7 @@ final class SiteRepository
                 $stmt->execute([$category]);
                 $rows = $stmt->fetchAll();
             } else {
-                $rows = $category === 'commercial' ? [] : $pdo->query('SELECT title, text FROM advantages WHERE is_published = 1 ORDER BY sort_order, id')->fetchAll();
+                $rows = in_array($category, ['commercial', 'house'], true) ? [] : $pdo->query('SELECT title, text FROM advantages WHERE is_published = 1 ORDER BY sort_order, id')->fetchAll();
             }
             return $rows ?: $fallback;
         } catch (\Throwable) {
@@ -245,7 +288,7 @@ final class SiteRepository
     {
         $pdo = $this->pdo();
         if (!$pdo) {
-            return $category === 'commercial' ? [] : SiteImages::normalizePortfolio($this->seed['portfolio']);
+            return in_array($category, ['commercial', 'house'], true) ? [] : SiteImages::normalizePortfolio($this->seed['portfolio']);
         }
         try {
             if ($this->hasColumn('portfolio_items', 'category')) {
@@ -253,7 +296,7 @@ final class SiteRepository
                 $stmt->execute([$category]);
                 $items = $stmt->fetchAll();
             } else {
-                if ($category === 'commercial') {
+                if (in_array($category, ['commercial', 'house'], true)) {
                     return [];
                 }
                 $items = $pdo->query('SELECT * FROM portfolio_items WHERE is_published = 1 ORDER BY sort_order, id DESC')->fetchAll();
@@ -264,12 +307,12 @@ final class SiteRepository
                 $item['images'] = $stmt->fetchAll();
             }
             unset($item);
-            if ($category === 'commercial') {
+            if (in_array($category, ['commercial', 'house'], true)) {
                 return $items ?: [];
             }
             return SiteImages::normalizePortfolio($items ?: $this->seed['portfolio']);
         } catch (\Throwable) {
-            return $category === 'commercial' ? [] : SiteImages::normalizePortfolio($this->seed['portfolio']);
+            return in_array($category, ['commercial', 'house'], true) ? [] : SiteImages::normalizePortfolio($this->seed['portfolio']);
         }
     }
 
@@ -291,7 +334,7 @@ final class SiteRepository
                 $stmt->execute([$category]);
                 return $stmt->fetchAll() ?: $fallback;
             }
-            $rows = $category === 'commercial' ? [] : $pdo->query('SELECT * FROM repair_tariffs WHERE is_active = 1 ORDER BY sort_order, id')->fetchAll();
+            $rows = in_array($category, ['commercial', 'house'], true) ? [] : $pdo->query('SELECT * FROM repair_tariffs WHERE is_active = 1 ORDER BY sort_order, id')->fetchAll();
             return $rows ?: $fallback;
         } catch (\Throwable) {
             return $fallback;
@@ -361,7 +404,7 @@ final class SiteRepository
         }
         $type = (string)($filters['lead_type'] ?? '');
         try {
-            if (in_array($type, ['apartment', 'commercial'], true) && $this->hasColumn('leads', 'lead_type')) {
+            if (in_array($type, ['apartment', 'commercial', 'house'], true) && $this->hasColumn('leads', 'lead_type')) {
                 $stmt = $pdo->prepare('SELECT * FROM leads WHERE lead_type = ? ORDER BY created_at DESC LIMIT 200');
                 $stmt->execute([$type]);
                 $rows = $stmt->fetchAll();
@@ -411,6 +454,16 @@ final class SiteRepository
     {
         $stmt = $this->requirePdo()->prepare('INSERT INTO lead_files (lead_id, stored_name, original_name, mime_type, size_bytes, created_at) VALUES (?, ?, ?, ?, ?, NOW())');
         $stmt->execute([$leadId, $file['stored_name'], $file['original_name'], $file['mime_type'] ?? '', (int)($file['size_bytes'] ?? 0)]);
+    }
+
+    public function deleteLeadFile(int $id): ?array
+    {
+        $file = $this->leadFile($id);
+        if (!$file) {
+            return null;
+        }
+        $this->requirePdo()->prepare('DELETE FROM lead_files WHERE id = ?')->execute([$id]);
+        return $file;
     }
 
     public function dashboardStats(): array
@@ -495,6 +548,40 @@ final class SiteRepository
             if ($publishedOnly && (int)($row['is_published'] ?? 1) === 0) {
                 continue;
             }
+            $merged[] = $row;
+        }
+        usort($merged, static fn($a, $b) => ((int)($a['sort_order'] ?? 100)) <=> ((int)($b['sort_order'] ?? 100)));
+        return $merged;
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     * @return list<array<string,mixed>>
+     */
+    private function mergeHouseRows(array $rows, bool $publishedOnly): array
+    {
+        $bySlug = [];
+        foreach ($rows as $row) {
+            $bySlug[(string)$row['slug']] = $row;
+        }
+        $merged = [];
+        foreach (HouseCatalog::services() as $catalog) {
+            $row = $bySlug[$catalog['slug']] ?? null;
+            $item = HouseCatalog::merge($row, $catalog);
+            if ($publishedOnly && (int)($item['is_published'] ?? 1) === 0) {
+                continue;
+            }
+            if (empty($item['price'])) {
+                $item['price'] = null;
+            }
+            $merged[] = $item;
+            unset($bySlug[$catalog['slug']]);
+        }
+        foreach ($bySlug as $row) {
+            if ($publishedOnly && (int)($row['is_published'] ?? 1) === 0) {
+                continue;
+            }
+            $row['price'] = $row['price'] ?? null;
             $merged[] = $row;
         }
         usort($merged, static fn($a, $b) => ((int)($a['sort_order'] ?? 100)) <=> ((int)($b['sort_order'] ?? 100)));

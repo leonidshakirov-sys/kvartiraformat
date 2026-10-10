@@ -7,7 +7,7 @@ $heroImage = SiteImages::serviceHero($service);
     <div class="container page-hero-content">
         <nav class="breadcrumbs">
             <a href="/">Главная</a>
-            <a href="/#services">Услуги</a>
+            <a href="/remont-kvartir/">Ремонт квартир</a>
             <span><?= e($service['title']) ?></span>
         </nav>
         <h1><?= e($h1) ?></h1>
@@ -16,7 +16,7 @@ $heroImage = SiteImages::serviceHero($service);
         <a class="btn btn-primary" href="#calculator">Рассчитать стоимость</a>
     </div>
 </section>
-<?php require __DIR__ . '/../partials/calculator.php'; ?>
+<?php $calcLeadType = 'apartment'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section">
     <div class="container article">
         <div class="media-frame article-photo">

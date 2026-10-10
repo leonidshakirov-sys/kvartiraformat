@@ -71,6 +71,7 @@ final class AdminController
             'portfolio' => 'admin/portfolio',
             'seo' => 'admin/seo',
             'calculator' => 'admin/calculator',
+            'houses' => 'admin/houses',
             'commercial' => 'admin/commercial',
             'leads' => 'admin/leads',
             'settings' => 'admin/settings',
@@ -98,7 +99,9 @@ final class AdminController
                 'save_advantage' => $this->saveAdvantage($request),
                 'save_portfolio' => $this->savePortfolio($request),
                 'save_commercial_texts' => $this->saveCommercialTexts($request),
+                'save_house_texts' => $this->saveHouseTexts($request),
                 'lead_status' => $this->updateLead($request),
+                'delete_lead_file' => $this->deleteLeadFile($request),
                 'upload_media' => $this->uploadMedia(),
                 'delete' => $this->repo->deleteById((string)$request->input('table'), (int)$request->input('id')),
                 'telegram_test' => $this->telegramTest(),
@@ -182,15 +185,20 @@ final class AdminController
             'pages' => $this->repo->pages(),
             'services' => $this->repo->services('apartment', false),
             'commercialServices' => $this->repo->services('commercial', false),
+            'houseServices' => $this->repo->services('house', false),
             'geoPages' => $this->repo->geoPages(false),
             'faqs' => $this->repo->faqs('apartment'),
             'commercialFaqs' => $this->repo->faqs('commercial'),
+            'houseFaqs' => $this->repo->faqs('house'),
             'advantages' => $this->repo->advantages('apartment'),
             'commercialAdvantages' => $this->repo->advantages('commercial'),
+            'houseAdvantages' => $this->repo->advantages('house'),
             'portfolio' => $this->repo->portfolio('apartment'),
             'commercialPortfolio' => $this->repo->portfolio('commercial'),
+            'housePortfolio' => $this->repo->portfolio('house'),
             'tariffs' => $this->repo->tariffs('apartment'),
             'commercialTariffs' => $this->repo->tariffs('commercial'),
+            'houseTariffs' => $this->repo->tariffs('house'),
             'telegramConfigured' => $this->telegram->isConfigured(),
             'telegramQueue' => $this->telegram->recentQueue(8),
             'mailConfigured' => $this->mail?->isConfigured() ?? false,
@@ -201,7 +209,7 @@ final class AdminController
 
     private function saveSettings(Request $request): void
     {
-        $allowed = ['brand_name','brand_name_full','brand_tagline','service_area','legal_name','inn','phone','phone_href','office_address','domain','ym_counter_id','map_embed_url','route_url','privacy_version','commercial_meta_title','commercial_meta_description','commercial_h1','commercial_intro','commercial_hub_published','notify_email','notify_email_from'];
+        $allowed = ['brand_name','brand_name_full','brand_tagline','service_area','legal_name','inn','phone','phone_href','office_address','domain','ym_counter_id','map_embed_url','route_url','privacy_version','commercial_meta_title','commercial_meta_description','commercial_h1','commercial_intro','commercial_hub_published','house_meta_title','house_meta_description','house_h1','house_intro','house_hub_published','apartment_hub_published','notify_email','notify_email_from'];
         $values = [];
         $post = $request->post();
         foreach ($allowed as $key) {
@@ -221,7 +229,7 @@ final class AdminController
         if (!$pdo) {
             throw new \RuntimeException('База данных не настроена.');
         }
-        $category = in_array((string)$request->input('category'), ['commercial', 'apartment'], true) ? (string)$request->input('category') : 'apartment';
+        $category = in_array((string)$request->input('category'), ['commercial', 'apartment', 'house'], true) ? (string)$request->input('category') : 'apartment';
         if ((int)$request->input('id') > 0) {
             $stmt = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, is_active=?, sort_order=?, category=?, updated_at=NOW() WHERE id=?');
             $stmt->execute([$request->input('repair_type'), $request->input('package_type'), (int)$request->input('price_per_m2'), $request->input('note'), (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, (int)$request->input('id')]);
@@ -235,7 +243,7 @@ final class AdminController
     {
         $pdo = $this->repo->pdo();
         if (!$pdo) throw new \RuntimeException('База данных не настроена.');
-        $category = in_array((string)$request->input('category'), ['commercial', 'apartment'], true) ? (string)$request->input('category') : 'apartment';
+        $category = in_array((string)$request->input('category'), ['commercial', 'apartment', 'house'], true) ? (string)$request->input('category') : 'apartment';
         $stmt = $pdo->prepare('INSERT INTO faqs (question, answer, is_published, sort_order, category, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())');
         $stmt->execute([$request->input('question'), $request->input('answer'), (int)$request->input('is_published', 1), (int)$request->input('sort_order', 100), $category]);
     }
@@ -244,7 +252,7 @@ final class AdminController
     {
         $pdo = $this->repo->pdo();
         if (!$pdo) throw new \RuntimeException('База данных не настроена.');
-        $category = in_array((string)$request->input('category'), ['commercial', 'apartment'], true) ? (string)$request->input('category') : 'apartment';
+        $category = in_array((string)$request->input('category'), ['commercial', 'apartment', 'house'], true) ? (string)$request->input('category') : 'apartment';
         $stmt = $pdo->prepare('INSERT INTO advantages (title, text, is_published, sort_order, category, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())');
         $stmt->execute([$request->input('title'), $request->input('text'), (int)$request->input('is_published', 1), (int)$request->input('sort_order', 100), $category]);
     }
@@ -268,7 +276,7 @@ final class AdminController
         if (!$pdo) {
             throw new \RuntimeException('База данных не настроена.');
         }
-        $category = in_array((string)$request->input('category'), ['commercial', 'apartment'], true) ? (string)$request->input('category') : 'apartment';
+        $category = in_array((string)$request->input('category'), ['commercial', 'apartment', 'house'], true) ? (string)$request->input('category') : 'apartment';
         $stmt = $pdo->prepare('INSERT INTO portfolio_items (title, city, district, area, repair_type, cost, duration, works, is_demo, is_published, sort_order, category, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
         $stmt->execute([$request->input('title'), $request->input('city'), $request->input('district'), $request->input('area'), $request->input('repair_type'), $request->input('cost'), $request->input('duration'), $request->input('works'), (int)$request->input('is_demo', 0), (int)$request->input('is_published', 1), (int)$request->input('sort_order', 100), $category]);
         $id = (int)$pdo->lastInsertId();
@@ -314,6 +322,26 @@ final class AdminController
         ]);
     }
 
+    private function saveHouseTexts(Request $request): void
+    {
+        $post = $request->post();
+        $this->repo->updateSettings([
+            'house_meta_title' => trim((string)($post['house_meta_title'] ?? '')),
+            'house_meta_description' => trim((string)($post['house_meta_description'] ?? '')),
+            'house_h1' => trim((string)($post['house_h1'] ?? '')),
+            'house_intro' => trim((string)($post['house_intro'] ?? '')),
+            'house_hub_published' => !empty($post['house_hub_published']) ? '1' : '0',
+        ]);
+    }
+
+    private function deleteLeadFile(Request $request): void
+    {
+        $file = $this->repo->deleteLeadFile((int)$request->input('id', 0));
+        if ($file) {
+            $this->uploads->deleteStored([(string)$file['stored_name']]);
+        }
+    }
+
     private function downloadLeadFile(Request $request): never
     {
         $file = $this->repo->leadFile((int)$request->input('id', 0));
@@ -328,10 +356,20 @@ final class AdminController
             echo 'Файл недоступен';
             exit;
         }
-        header('Content-Type: application/octet-stream');
+        $name = str_replace(['"', "\r", "\n"], '', (string)$file['original_name']);
+        $mime = strtolower((string)($file['mime_type'] ?? ''));
+        $preview = (string)$request->input('preview', '') === '1';
+        $isImage = in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true);
         header('X-Content-Type-Options: nosniff');
-        header('Content-Disposition: attachment; filename="' . str_replace('"', '', (string)$file['original_name']) . '"');
+        header('X-Frame-Options: DENY');
         header('Content-Length: ' . (string)filesize($path));
+        if ($preview && $isImage) {
+            header('Content-Type: ' . $mime);
+            header('Content-Disposition: inline; filename="' . $name . '"');
+        } else {
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . $name . '"');
+        }
         readfile($path);
         exit;
     }
