@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS admin_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO settings (setting_key, setting_value, updated_at) VALUES
-('brand_name','КвартираФормат',NOW()),('brand_name_full','КВАРТИРАФОРМАТ',NOW()),('brand_tagline','Ремонт квартир под ключ',NOW()),('service_area','Москва и Московская область',NOW()),('legal_name','ИП Шакиров Леонид Альбертович',NOW()),('inn','772607203680',NOW()),('phone','+7 (916) 265-92-62',NOW()),('phone_href','tel:+79162659262',NOW()),('office_address','г. Москва, 32-й км МКАД, владение 15',NOW()),('domain','kvartiraformat.ru',NOW()),('privacy_version','2026-10-10',NOW()),('route_url','https://yandex.ru/maps/?text=г.%20Москва,%2032-й%20км%20МКАД,%20владение%2015',NOW())
+('brand_name','КвартираФормат',NOW()),('brand_name_full','КВАРТИРАФОРМАТ',NOW()),('brand_tagline','Ремонт квартир под ключ',NOW()),('service_area','Москва и Московская область',NOW()),('legal_name','ИП Шакиров Леонид Альбертович',NOW()),('inn','772607203680',NOW()),('phone','+7 (916) 265-92-62',NOW()),('phone_href','tel:+79162659262',NOW()),('office_address','г. Москва, 32-й км МКАД, владение 15',NOW()),('domain','kvartiraformat.ru',NOW()),('privacy_version','2026-10-10',NOW()),('ym_counter_id','113599005',NOW()),('route_url','https://yandex.ru/maps/?text=г.%20Москва,%2032-й%20км%20МКАД,%20владение%2015',NOW())
 ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value), updated_at=NOW();
 
 INSERT INTO services (title, slug, short, body, price, image_path, image_alt, meta_title, meta_description, h1, is_published, sort_order, created_at, updated_at) VALUES

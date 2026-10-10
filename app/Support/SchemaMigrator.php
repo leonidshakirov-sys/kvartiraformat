@@ -17,6 +17,7 @@ final class SchemaMigrator
             return;
         }
         $done = true;
+        self::ensureYmCounter($pdo);
 
         if (self::hasSetting($pdo, self::VERSION_KEY)) {
             if (!self::hasCommercialServices($pdo)) {
@@ -180,6 +181,21 @@ final class SchemaMigrator
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?');
         $stmt->execute([$table, $index]);
         return (int)$stmt->fetchColumn() > 0;
+    }
+
+    private static function ensureYmCounter(PDO $pdo): void
+    {
+        $current = '';
+        try {
+            $stmt = $pdo->prepare('SELECT setting_value FROM settings WHERE setting_key = ? LIMIT 1');
+            $stmt->execute(['ym_counter_id']);
+            $current = trim((string)$stmt->fetchColumn());
+        } catch (\Throwable) {
+            return;
+        }
+        if ($current === '' || $current === '123456') {
+            self::touchSetting($pdo, 'ym_counter_id', '113599005');
+        }
     }
 
     private static function hasSetting(PDO $pdo, string $key): bool

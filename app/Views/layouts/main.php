@@ -19,9 +19,23 @@
     <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
     <script defer src="<?= asset('js/app.js') ?>"></script>
-    <?php if (!empty($s['ym_counter_id'])): ?>
-        <script>window.KF_METRIKA_ID = '<?= e($s['ym_counter_id']) ?>';</script>
-    <?php endif; ?>
+    <?php
+        $ymId = preg_replace('/\D+/', '', (string)($s['ym_counter_id'] ?? '')) ?: '113599005';
+    ?>
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        window.KF_METRIKA_ID = <?= (int)$ymId ?>;
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=<?= (int)$ymId ?>', 'ym');
+
+        ym(<?= (int)$ymId ?>, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/<?= (int)$ymId ?>" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
     <script type="application/ld+json"><?= json_encode([
         '@context' => 'https://schema.org',
         '@type' => 'HomeAndConstructionBusiness',

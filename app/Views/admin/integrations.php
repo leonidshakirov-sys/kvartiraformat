@@ -61,7 +61,8 @@
     <form method="post" class="admin-form grid">
         <?= App\Core\Csrf::field() ?>
         <input type="hidden" name="action" value="save_settings">
-        <label>Яндекс Метрика ID<input name="ym_counter_id" value="<?= e($s['ym_counter_id'] ?? '') ?>"></label>
+        <label>Яндекс Метрика ID<input name="ym_counter_id" value="<?= e($s['ym_counter_id'] ?? '113599005') ?>" placeholder="113599005"></label>
+        <p class="muted">На публичных страницах установлен официальный счётчик с Webvisor, картой кликов, электронной коммерцией и точным показателем отказов. Если поле пустое, используется <code>113599005</code>.</p>
         <button class="btn btn-primary">Сохранить Метрику</button>
     </form>
 </section>

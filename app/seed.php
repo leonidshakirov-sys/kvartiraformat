@@ -14,7 +14,7 @@ return [
         'phone_href' => 'tel:+79162659262',
         'office_address' => 'г. Москва, 32-й км МКАД, владение 15',
         'domain' => 'kvartiraformat.ru',
-        'ym_counter_id' => '',
+        'ym_counter_id' => '113599005',
         'map_embed_url' => '',
         'route_url' => 'https://yandex.ru/maps/?text=г.%20Москва,%2032-й%20км%20МКАД,%20владение%2015',
         'telegram_enabled_note' => 'Интеграция начнёт отправку после указания токена и chat_id в защищённой конфигурации.',
