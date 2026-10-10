@@ -23,7 +23,11 @@ return [
     'telegram' => [
         'bot_token' => '',
         'chat_id' => '',
-        'timeout' => 6,
+        'connect_timeout' => 5,
+        'timeout' => 10,
+    ],
+    'mail' => [
+        'to' => '',
     ],
     'security' => [
         'admin_login_limit' => 7,
