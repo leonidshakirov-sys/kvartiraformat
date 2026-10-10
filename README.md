@@ -22,6 +22,7 @@ PHP/MySQL-сайт под обычный виртуальный хостинг B
 ## Установка на Beget
 
 1. Создайте сайт и направьте web-root на папку `public`.
+   - Если на виртуальном хостинге Beget web-root уже фиксирован как `public_html`, загрузите проект целиком в `public_html`: корневой `.htaccess` перенаправит публичные запросы в `/public` и запретит доступ к закрытым папкам.
 2. Создайте MySQL-базу в панели Beget.
 3. Импортируйте `database/database.sql` через phpMyAdmin или CLI.
 4. Скопируйте `config/config.sample.php` в `config/config.php` и заполните доступы к БД.
