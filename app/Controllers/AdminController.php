@@ -185,8 +185,14 @@ final class AdminController
     {
         $allowed = ['brand_name','brand_name_full','brand_tagline','service_area','legal_name','inn','phone','phone_href','office_address','domain','ym_counter_id','map_embed_url','route_url','privacy_version'];
         $values = [];
+        $post = $request->post();
         foreach ($allowed as $key) {
-            $values[$key] = trim((string)$request->input($key, ''));
+            if (array_key_exists($key, $post)) {
+                $values[$key] = trim((string)$post[$key]);
+            }
+        }
+        if (!$values) {
+            throw new \RuntimeException('Нет данных для сохранения.');
         }
         $this->repo->updateSettings($values);
     }

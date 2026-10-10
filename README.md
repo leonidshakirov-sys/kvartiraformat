@@ -5,6 +5,7 @@ PHP/MySQL-сайт под обычный виртуальный хостинг B
 ## Стек
 
 - PHP 8.2+
+- PHP-расширения: PDO, pdo_mysql, mbstring, fileinfo/GD желательно для расширенной обработки изображений
 - MySQL/MariaDB
 - Apache + `.htaccess`
 - PDO, HTML/CSS/JS без постоянно работающего Node.js
