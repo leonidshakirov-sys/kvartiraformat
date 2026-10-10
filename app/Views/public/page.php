@@ -1,0 +1,1 @@
+<section class="page-hero"><div class="container"><nav class="breadcrumbs"><a href="/">Главная</a><span><?= e($page['title']) ?></span></nav><h1><?= e($h1) ?></h1></div></section><section class="section"><div class="container article"><?= $page['body'] ?></div></section>
