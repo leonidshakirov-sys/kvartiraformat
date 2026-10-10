@@ -148,7 +148,9 @@ p { margin: 0 0 14px; color: var(--color-text-secondary); max-width: 68ch; }
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(38, 63, 82, 0.88) 0%, rgba(38, 63, 82, 0.55) 48%, rgba(38, 63, 82, 0.28) 100%);
+  background:
+    linear-gradient(180deg, rgba(38, 63, 82, 0.28) 0%, rgba(38, 63, 82, 0.7) 58%, rgba(38, 63, 82, 0.88) 100%),
+    linear-gradient(90deg, rgba(38, 63, 82, 0.82) 0%, rgba(38, 63, 82, 0.42) 56%, rgba(38, 63, 82, 0.2) 100%);
 }
 .hero-content { position: relative; z-index: 1; padding: 110px 0 72px; }
 .hero h1, .hero p { color: var(--color-on-dark); }
@@ -462,6 +464,9 @@ th { background: #F7F6F2; color: var(--color-text); }
 @media (max-width: 640px) {
   :root { --gutter: 16px; --section-space: 52px; }
   .hero { min-height: 520px; }
+  .hero:after {
+    background: linear-gradient(180deg, rgba(38, 63, 82, 0.48) 0%, rgba(38, 63, 82, 0.84) 42%, rgba(38, 63, 82, 0.93) 100%);
+  }
   .hero-content { padding: 64px 0 36px; }
   .service-cards, .feature-grid, .calc-steps, .footer-grid, .form-grid, .admin-form.grid, .compact, .portfolio-grid { grid-template-columns: minmax(0, 1fr); }
   .hero-actions .btn, .commercial-home .hero-actions .btn { width: 100%; }
