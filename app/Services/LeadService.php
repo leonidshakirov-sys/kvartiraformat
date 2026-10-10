@@ -18,7 +18,8 @@ final class LeadService
         private Config $config,
         private SiteRepository $repo,
         private TelegramService $telegram,
-        private ?UploadService $uploads = null
+        private ?UploadService $uploads = null,
+        private ?MailNotifyService $mail = null
     ) {
     }
 
@@ -96,8 +97,15 @@ final class LeadService
             }
         }
 
-        $this->telegram->queue($leadId, $this->telegramMessage($leadId, $publicId, $data, $estimate, $leadType, $attachmentNote));
-        $this->telegram->sendPending(1);
+        $message = $this->telegramMessage($leadId, $publicId, $data, $estimate, $leadType, $attachmentNote);
+        $this->telegram->queue($leadId, $message);
+        $delivery = $this->telegram->sendPending(1);
+        if (($delivery['sent'] ?? 0) < 1 && $this->mail) {
+            $this->mail->sendLeadCopy(
+                'КвартираФормат — новая заявка ' . $publicId,
+                strip_tags(str_replace('</b>', '', str_replace('<b>', '', $message)))
+            );
+        }
 
         return ['ok' => true, 'lead_id' => $leadId, 'public_id' => $publicId, 'estimate' => $estimate];
     }

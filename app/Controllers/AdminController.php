@@ -11,6 +11,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\View;
 use App\Repositories\SiteRepository;
+use App\Services\MailNotifyService;
 use App\Services\TelegramService;
 use App\Services\UploadService;
 
@@ -22,7 +23,8 @@ final class AdminController
         private Auth $auth,
         private Config $config,
         private TelegramService $telegram,
-        private UploadService $uploads
+        private UploadService $uploads,
+        private ?MailNotifyService $mail = null
     ) {
     }
 
@@ -100,6 +102,8 @@ final class AdminController
                 'upload_media' => $this->uploadMedia(),
                 'delete' => $this->repo->deleteById((string)$request->input('table'), (int)$request->input('id')),
                 'telegram_test' => $this->telegramTest(),
+                'save_notify' => $this->saveNotify($request),
+                'email_test' => $this->emailTest(),
                 default => null,
             };
             $_SESSION['flash_success'] = 'Изменения сохранены.';
@@ -188,6 +192,8 @@ final class AdminController
             'tariffs' => $this->repo->tariffs('apartment'),
             'commercialTariffs' => $this->repo->tariffs('commercial'),
             'telegramConfigured' => $this->telegram->isConfigured(),
+            'telegramQueue' => $this->telegram->recentQueue(8),
+            'mailConfigured' => $this->mail?->isConfigured() ?? false,
             'media' => $this->repo->media(),
             'dbError' => $this->repo->dbError(),
         ];
@@ -195,7 +201,7 @@ final class AdminController
 
     private function saveSettings(Request $request): void
     {
-        $allowed = ['brand_name','brand_name_full','brand_tagline','service_area','legal_name','inn','phone','phone_href','office_address','domain','ym_counter_id','map_embed_url','route_url','privacy_version','commercial_meta_title','commercial_meta_description','commercial_h1','commercial_intro','commercial_hub_published'];
+        $allowed = ['brand_name','brand_name_full','brand_tagline','service_area','legal_name','inn','phone','phone_href','office_address','domain','ym_counter_id','map_embed_url','route_url','privacy_version','commercial_meta_title','commercial_meta_description','commercial_h1','commercial_intro','commercial_hub_published','notify_email','notify_email_from'];
         $values = [];
         $post = $request->post();
         foreach ($allowed as $key) {
@@ -334,7 +340,35 @@ final class AdminController
     {
         $result = $this->telegram->sendTest();
         if (!$result['ok']) {
-            throw new \RuntimeException('Telegram: ' . $result['error']);
+            $stage = $result['stage'] ?? 'connect';
+            $hint = in_array($stage, ['dns', 'tcp', 'tls', 'connect', 'transfer'], true)
+                ? ' Это сетевой отказ до api.telegram.org (на Beget Telegram часто блокируется ТСПУ). Заявки уже сохраняются в разделе «Заявки». Включите email ниже и запустите php tools/telegram_diagnose.php по SSH.'
+                : ' Проверьте chat_id и что бот запущен. Токен в отчёт не выводится.';
+            throw new \RuntimeException('Telegram: ' . $result['error'] . $hint);
+        }
+    }
+
+    private function saveNotify(\App\Core\Request $request): void
+    {
+        $this->repo->updateSettings([
+            'notify_email' => trim((string)$request->input('notify_email', '')),
+            'notify_email_from' => trim((string)$request->input('notify_email_from', '')),
+            'notify_email_enabled' => $request->input('notify_email_enabled') ? '1' : '0',
+        ]);
+    }
+
+    private function emailTest(): void
+    {
+        if (!$this->mail) {
+            throw new \RuntimeException('Почтовый сервис недоступен.');
+        }
+        $this->saveNotify(new \App\Core\Request());
+        if (!$this->mail->isConfigured()) {
+            throw new \RuntimeException('Включите email-уведомления и укажите адрес.');
+        }
+        $result = $this->mail->sendTest();
+        if (!$result['ok']) {
+            throw new \RuntimeException((string)$result['error']);
         }
     }
 }

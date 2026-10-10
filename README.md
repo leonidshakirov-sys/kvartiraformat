@@ -37,8 +37,10 @@ PHP/MySQL-сайт под обычный виртуальный хостинг B
 
 - Токен бота и chat_id хранятся только в `config/config.php`.
 - Заявка сначала сохраняется в MySQL, затем ставится в `telegram_queue`.
-- Если Telegram недоступен, Cron повторит отправку.
-- Кнопка тестового уведомления находится в `/admin/integrations`.
+- С Beget исходящий HTTPS к `api.telegram.org` часто блокируется ТСПУ. Это не ломает сохранение заявок.
+- Диагностика на сервере: `php tools/telegram_diagnose.php` (см. `docs/telegram-beget.md`).
+- Запасной канал: email в `/admin/integrations`.
+- Cron: `php tools/telegram_retry.php` каждые 5 минут.
 
 ## SEO
 
