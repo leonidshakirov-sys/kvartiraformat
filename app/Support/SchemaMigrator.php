@@ -18,6 +18,7 @@ final class SchemaMigrator
         }
         $done = true;
         self::ensureYmCounter($pdo);
+        self::ensureStartingPrices($pdo);
 
         if (self::hasSetting($pdo, self::VERSION_KEY)) {
             if (!self::hasCommercialServices($pdo)) {
@@ -181,6 +182,37 @@ final class SchemaMigrator
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?');
         $stmt->execute([$table, $index]);
         return (int)$stmt->fetchColumn() > 0;
+    }
+
+    private static function ensureStartingPrices(PDO $pdo): void
+    {
+        try {
+            $update = $pdo->prepare('UPDATE services SET price = ?, updated_at = NOW() WHERE slug = ? AND (price IS NULL OR price = 0)');
+            foreach (StartingPrices::all() as $slug => $price) {
+                $update->execute([$price, $slug]);
+            }
+        } catch (\Throwable) {
+            return;
+        }
+
+        try {
+            $count = (int)$pdo->query('SELECT COUNT(*) FROM repair_tariffs')->fetchColumn();
+        } catch (\Throwable) {
+            return;
+        }
+        if ($count > 0) {
+            return;
+        }
+        $hasCategory = self::columnExists($pdo, 'repair_tariffs', 'category');
+        foreach (StartingPrices::tariffs() as $tariff) {
+            if ($hasCategory) {
+                $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?, NOW(), NOW())');
+                $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $tariff['price_per_m2'], $tariff['note'], $tariff['sort_order'], $tariff['category']]);
+            } elseif ($tariff['category'] === 'apartment') {
+                $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, NOW(), NOW())');
+                $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $tariff['price_per_m2'], $tariff['note'], $tariff['sort_order']]);
+            }
+        }
     }
 
     private static function ensureYmCounter(PDO $pdo): void

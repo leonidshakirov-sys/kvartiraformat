@@ -30,7 +30,7 @@ function format_price(?int $price): string
     if (!$price || $price <= 0) {
         return 'По расчёту';
     }
-    return number_format($price, 0, ',', ' ') . ' ₽/м²';
+    return 'от ' . number_format($price, 0, ',', ' ') . ' ₽/м²';
 }
 
 function excerpt(string $text, int $limit = 170): string

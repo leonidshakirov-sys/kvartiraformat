@@ -12,6 +12,7 @@ $processImage = $processImage ?? $heroImage;
         </nav>
         <h1><?= e($h1) ?></h1>
         <p><?= e($service['intro'] ?? $service['short'] ?? '') ?></p>
+        <p><strong><?= e(format_price(isset($service['price']) ? (int)$service['price'] : null)) ?></strong></p>
         <a class="btn btn-primary" href="#calculator">Получить смету на ремонт помещения</a>
     </div>
 </section>

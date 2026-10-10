@@ -18,29 +18,19 @@ $processImage = $processImage ?? $heroImage;
         </div>
     </div>
 </section>
-<section class="section" id="commercial-types">
+<section class="section section-muted" id="commercial-types">
     <div class="container">
         <div class="section-head">
             <span class="eyebrow">Направления</span>
             <h2>Основные виды коммерческих помещений</h2>
-            <p>Иллюстративные фото показывают типы объектов. Они не выдаются за выполненные компанией ремонты.</p>
+            <p>Офисы, магазины, салоны, кафе и склады. Фотографии показывают тип помещения и не выдаются за выполненные объекты компании.</p>
         </div>
         <div class="cards service-cards">
-            <?php foreach ($commercialServices as $item): $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1068]; ?>
-                <article class="card service-card">
-                    <div class="media-frame card-image"><?= picture($cardImage) ?></div>
-                    <h3><?= e($item['title']) ?></h3>
-                    <p><?= e($item['short'] ?? '') ?></p>
-                    <div class="card-actions">
-                        <a class="btn btn-small" href="/<?= e($item['slug']) ?>/">Подробнее</a>
-                        <a class="btn btn-small btn-outline" href="/<?= e($item['slug']) ?>/#calculator">Рассчитать</a>
-                    </div>
-                </article>
-            <?php endforeach; ?>
+            <?php foreach ($commercialServices as $item): $card = $item; $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1000]; $cardHref = '/' . $item['slug'] . '/'; $cardCalcHref = '/' . $item['slug'] . '/#calculator'; require __DIR__ . '/../partials/service-card.php'; endforeach; ?>
         </div>
     </div>
 </section>
-<section class="section alt">
+<section class="section section-muted">
     <div class="container split-media">
         <div>
             <span class="eyebrow">Состав работ</span>
@@ -55,12 +45,12 @@ $processImage = $processImage ?? $heroImage;
 <section class="section">
     <div class="container article">
         <h2>Особенности ремонта коммерческих объектов</h2>
-        <p>Коммерческий ремонт отличается от квартирного тем, что помещение должно начать работать в конкретную дату: открытие магазина, въезд сотрудников, запуск кухни. Поэтому смета собирается по площади, состоянию коробки и техническому заданию, а не по универсальной ставке «цена за м²».</p>
-        <p>Для арендатора важны правила управляющей компании, возможность шумных работ и согласование перегородок. Для собственника — сохранение конструкции и понятный объём, который можно передать следующему арендатору. Мы фиксируем это до старта и не публикуем неподтверждённые цифры.</p>
+        <p>Коммерческий ремонт отличается от квартирного тем, что помещение должно начать работать в конкретную дату: открытие магазина, въезд сотрудников, запуск кухни. На сайте указаны стартовые цены за м², а точная смета собирается по площади, состоянию помещения и техническому заданию.</p>
+        <p>Для арендатора важны правила управляющей компании, возможность шумных работ и согласование перегородок. Для собственника — сохранение конструкции и понятный объём, который можно передать следующему арендатору. На сайте указаны стартовые цены, итог подтверждаем после осмотра.</p>
         <p>Отделка офиса, торгового зала, салона или склада требует разного набора работ. Общая страница помогает выбрать направление, а точный перечень появляется после осмотра объекта в Москве или Московской области.</p>
     </div>
 </section>
-<section class="section alt">
+<section class="section section-muted">
     <div class="container">
         <div class="section-head">
             <span class="eyebrow">Почему с нами</span>
@@ -88,7 +78,7 @@ $processImage = $processImage ?? $heroImage;
     </div>
 </section>
 <?php require __DIR__ . '/../partials/calculator-commercial.php'; ?>
-<section class="section alt">
+<section class="section section-muted">
     <div class="container">
         <div class="section-head">
             <span class="eyebrow">Примеры</span>
@@ -96,7 +86,7 @@ $processImage = $processImage ?? $heroImage;
             <?php if (!empty($portfolio)): ?>
                 <p>Ниже — опубликованные объекты коммерческого портфолио.</p>
             <?php else: ?>
-                <p>Фотографий выполненных коммерческих объектов пока нет. Показаны иллюстративные интерьеры разных типов помещений. Они не являются работами компании КвартираФормат.</p>
+                <p>Показываем интерьеры разных типов помещений как ориентир по задаче. Когда появятся съёмки выполненных объектов, заменим иллюстрации реальными работами.</p>
             <?php endif; ?>
         </div>
         <?php if (!empty($portfolio)): ?>
@@ -128,7 +118,7 @@ $processImage = $processImage ?? $heroImage;
         </div>
     </div>
 </section>
-<section class="section alt">
+<section class="section section-muted">
     <div class="container">
         <div class="section-head">
             <span class="eyebrow">FAQ</span>

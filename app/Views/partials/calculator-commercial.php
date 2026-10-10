@@ -4,12 +4,12 @@ use App\Support\CommercialCatalog;
 $propertyType = $propertyType ?? '';
 $propertyTypes = CommercialCatalog::propertyTypes();
 ?>
-<section class="section calculator commercial-calc" id="calculator">
+<section class="section calculator commercial-calc section-dark" id="calculator">
     <div class="container">
         <div class="section-head">
             <span class="eyebrow">Калькулятор коммерческого ремонта</span>
             <h2>Получите смету на ремонт помещения</h2>
-            <p>Стоимость не считается по шаблону. Если тарифы не заданы, отправим заявку на индивидуальный расчёт по площади, состоянию и перечню работ.</p>
+            <p>Укажите площадь и тип помещения — покажем стартовый ориентир. Точная смета готовится после осмотра и уточнения технического задания.</p>
         </div>
         <form class="calc-card" data-calculator data-lead-form action="/lead/submit" method="post" enctype="multipart/form-data">
             <?= Csrf::field() ?>
