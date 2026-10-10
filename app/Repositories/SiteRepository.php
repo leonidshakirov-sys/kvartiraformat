@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\Core\Database;
 use App\Support\CommercialCatalog;
 use App\Support\SiteImages;
+use App\Support\StartingPrices;
 use PDO;
 
 final class SiteRepository
@@ -84,7 +85,14 @@ final class SiteRepository
             if ($category === 'commercial') {
                 return $this->mergeCommercialRows($rows ?: [], $publishedOnly);
             }
-            return $rows ?: ($publishedOnly ? $fallback : $fallback);
+            $rows = $rows ?: $fallback;
+            foreach ($rows as &$row) {
+                if (empty($row['price'])) {
+                    $row['price'] = StartingPrices::forSlug((string)($row['slug'] ?? ''));
+                }
+            }
+            unset($row);
+            return $rows;
         } catch (\Throwable) {
             return $fallback;
         }
@@ -267,19 +275,26 @@ final class SiteRepository
 
     public function tariffs(?string $category = 'apartment'): array
     {
+        $fallback = [];
+        foreach (StartingPrices::tariffs() as $tariff) {
+            if ($tariff['category'] === ($category ?: 'apartment')) {
+                $fallback[] = $tariff + ['is_active' => 1];
+            }
+        }
         $pdo = $this->pdo();
         if (!$pdo) {
-            return [];
+            return $fallback;
         }
         try {
             if ($this->hasColumn('repair_tariffs', 'category')) {
                 $stmt = $pdo->prepare('SELECT * FROM repair_tariffs WHERE is_active = 1 AND category = ? ORDER BY sort_order, id');
                 $stmt->execute([$category]);
-                return $stmt->fetchAll();
+                return $stmt->fetchAll() ?: $fallback;
             }
-            return $category === 'commercial' ? [] : $pdo->query('SELECT * FROM repair_tariffs WHERE is_active = 1 ORDER BY sort_order, id')->fetchAll();
+            $rows = $category === 'commercial' ? [] : $pdo->query('SELECT * FROM repair_tariffs WHERE is_active = 1 ORDER BY sort_order, id')->fetchAll();
+            return $rows ?: $fallback;
         } catch (\Throwable) {
-            return [];
+            return $fallback;
         }
     }
 

@@ -325,3 +325,39 @@ INSERT INTO services (title, slug, short, body, price, image_path, image_alt, me
 ('Ремонт помещений свободного назначения','remont-pomescheniy-svobodnogo-naznacheniya','Подготовка коммерческих помещений к открытию бизнеса, перепланировке и дальнейшему использованию в рамках согласованного проекта.','<p>ПСН часто приходит как коробка. Состав работ зависит от будущего сценария использования и наличия проекта.</p>',NULL,'/assets/images/commercial/free-purpose.webp','Ремонт помещения свободного назначения: светлый коммерческий объём со стеклянными перегородками','Ремонт помещений свободного назначения в Москве | КвартираФормат','Подготовка коммерческих помещений свободного назначения к открытию бизнеса. Отделка, перепланировка в рамках согласованного проекта.','Ремонт помещений свободного назначения',1,60,'commercial',NOW(),NOW())
 ON DUPLICATE KEY UPDATE slug=slug;
 
+UPDATE services SET price = 18000 WHERE slug = 'remont-kvartir-pod-klyuch' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 16000 WHERE slug = 'kapitalnyy-remont' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 8500 WHERE slug = 'kosmeticheskiy-remont' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 28000 WHERE slug = 'dizaynerskiy-remont' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 15000 WHERE slug = 'remont-novostroek' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 17000 WHERE slug = 'remont-vtorichnogo-zhilya' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 16000 WHERE slug = 'remont-studiy' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 15000 WHERE slug = 'remont-odnokomnatnyh-kvartir' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 15500 WHERE slug = 'remont-dvuhkomnatnyh-kvartir' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 16000 WHERE slug = 'remont-trehkomnatnyh-kvartir' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 22000 WHERE slug = 'remont-vannoy-i-sanuzla' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 14000 WHERE slug = 'remont-ofisov' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 16000 WHERE slug = 'remont-magazinov' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 18000 WHERE slug = 'remont-salonov-krasoty' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 20000 WHERE slug = 'remont-kafe-restoranov' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 9000 WHERE slug = 'remont-skladskih-pomescheniy' AND (price IS NULL OR price = 0);
+UPDATE services SET price = 13000 WHERE slug = 'remont-pomescheniy-svobodnogo-naznacheniya' AND (price IS NULL OR price = 0);
+
+INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, created_at, updated_at) VALUES
+('Косметический','Только работы',8500,'Стартовая цена за м²',1,10,'apartment',NOW(),NOW()),
+('Косметический','Работы с черновыми материалами',11000,'Стартовая цена за м²',1,20,'apartment',NOW(),NOW()),
+('Косметический','Комплексный ремонт',13000,'Стартовая цена за м²',1,30,'apartment',NOW(),NOW()),
+('Капитальный','Только работы',16000,'Стартовая цена за м²',1,40,'apartment',NOW(),NOW()),
+('Капитальный','Работы с черновыми материалами',21000,'Стартовая цена за м²',1,50,'apartment',NOW(),NOW()),
+('Капитальный','Комплексный ремонт',25000,'Стартовая цена за м²',1,60,'apartment',NOW(),NOW()),
+('Дизайнерский','Только работы',28000,'Стартовая цена за м²',1,70,'apartment',NOW(),NOW()),
+('Дизайнерский','Работы с черновыми материалами',34000,'Стартовая цена за м²',1,80,'apartment',NOW(),NOW()),
+('Дизайнерский','Комплексный ремонт',39000,'Стартовая цена за м²',1,90,'apartment',NOW(),NOW()),
+('Офис','Только работы',14000,'Стартовая цена за м²',1,10,'commercial',NOW(),NOW()),
+('Магазин','Только работы',16000,'Стартовая цена за м²',1,20,'commercial',NOW(),NOW()),
+('Салон красоты','Только работы',18000,'Стартовая цена за м²',1,30,'commercial',NOW(),NOW()),
+('Кафе или ресторан','Только работы',20000,'Стартовая цена за м²',1,40,'commercial',NOW(),NOW()),
+('Склад','Только работы',9000,'Стартовая цена за м²',1,50,'commercial',NOW(),NOW()),
+('Помещение свободного назначения','Только работы',13000,'Стартовая цена за м²',1,60,'commercial',NOW(),NOW());
+
+

@@ -17,6 +17,8 @@
     <?php if (!empty($preloadImage)): ?>
         <link rel="preload" as="image" href="<?= e($preloadImage) ?>" type="image/webp">
     <?php endif; ?>
+    <link rel="preload" as="font" href="<?= asset('fonts/manrope-cyrillic.woff2') ?>" type="font/woff2" crossorigin>
+    <link rel="preload" as="font" href="<?= asset('fonts/manrope-latin.woff2') ?>" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="<?= asset('css/styles.css') ?>">
     <script defer src="<?= asset('js/app.js') ?>"></script>
     <?php
