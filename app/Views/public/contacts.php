@@ -28,8 +28,7 @@ $photo = SiteImages::contacts();
             <?php if (!empty($settings['map_embed_url'])): ?>
                 <iframe class="map" src="<?= e($settings['map_embed_url']) ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             <?php else: ?>
-                <div class="media-frame contact-photo"><?= picture($photo) ?></div>
-                <p class="muted">Карта появится после подтверждения точного расположения офиса.</p>
+                <div class="map-placeholder">Карта появится после подтверждения точного расположения офиса. Маршрут можно построить по кнопке слева.</div>
             <?php endif; ?>
         </div>
     </div>
