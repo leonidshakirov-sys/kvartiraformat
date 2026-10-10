@@ -19,7 +19,7 @@ final class PublicController
         $settings = $this->repo->settings();
         return $this->view->render('public/home', $this->common([
             'metaTitle' => 'Ремонт квартир под ключ в Москве и Подмосковье | КвартираФормат',
-            'metaDescription' => 'КвартираФормат: ремонт квартир под ключ в Москве и Московской области. Калькулятор, заявки, услуги, цены по расчёту и управляемые SEO-страницы.',
+            'metaDescription' => 'КвартираФормат: ремонт квартир под ключ в Москве и Московской области. Калькулятор стоимости, заявка на замер, услуги и прозрачный расчёт сметы.',
             'h1' => 'Ремонт квартир под ключ в Москве и Московской области',
             'canonical' => '/',
             'settings' => $settings,
@@ -29,6 +29,8 @@ final class PublicController
             'geoPages' => $this->repo->geoPages(true),
             'faqs' => $this->repo->faqs(),
             'tariffs' => $this->repo->tariffs(),
+            'preloadImage' => '/assets/images/hero/living-room.webp',
+            'ogImage' => '/assets/images/hero/living-room.webp',
         ]));
     }
 
@@ -48,7 +50,7 @@ final class PublicController
     {
         return $this->view->render('public/portfolio', $this->common([
             'metaTitle' => 'Портфолио ремонтов квартир | КвартираФормат',
-            'metaDescription' => 'Карточки объектов ремонта квартир. Демонстрационные материалы отмечены и заменяются реальными объектами через админ-панель.',
+            'metaDescription' => 'Примеры интерьеров после ремонта квартир. Иллюстративные фото отмечены и не выдаются за выполненные объекты компании.',
             'h1' => 'Наши работы',
             'canonical' => '/portfolio/',
             'portfolio' => $this->repo->portfolio(),

@@ -46,3 +46,14 @@ function active_class(string $current, string $expected): string
 {
     return $current === $expected ? ' is-active' : '';
 }
+
+/**
+ * @param array{src:string,alt:string,width?:int,height?:int,loading?:string} $image
+ */
+function picture(array $image, string $class = '', string $loading = ''): string
+{
+    $loading = $loading !== '' ? $loading : (string)($image['loading'] ?? 'lazy');
+    $fetch = $loading === 'eager' ? ' fetchpriority="high"' : '';
+    $classAttr = $class !== '' ? ' class="' . e($class) . '"' : '';
+    return '<img src="' . e($image['src']) . '" alt="' . e($image['alt']) . '" width="' . (int)($image['width'] ?? 1200) . '" height="' . (int)($image['height'] ?? 840) . '" loading="' . e($loading) . '" decoding="async"' . $fetch . $classAttr . '>';
+}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Database;
+use App\Support\SiteImages;
 use PDO;
 
 final class SiteRepository
@@ -133,7 +134,8 @@ final class SiteRepository
         }
         try {
             $rows = $pdo->query('SELECT question AS q, answer AS a FROM faqs WHERE is_published = 1 ORDER BY sort_order, id')->fetchAll();
-            return $rows ?: $this->seed['faqs'];
+            $rows = $rows ? $this->publicFaqs($rows) : $this->seed['faqs'];
+            return $rows;
         } catch (\Throwable) {
             return $this->seed['faqs'];
         }
@@ -157,7 +159,7 @@ final class SiteRepository
     {
         $pdo = $this->pdo();
         if (!$pdo) {
-            return $this->seed['portfolio'];
+            return SiteImages::normalizePortfolio($this->seed['portfolio']);
         }
         try {
             $items = $pdo->query('SELECT * FROM portfolio_items WHERE is_published = 1 ORDER BY sort_order, id DESC')->fetchAll();
@@ -167,9 +169,9 @@ final class SiteRepository
                 $item['images'] = $stmt->fetchAll();
             }
             unset($item);
-            return $items ?: $this->seed['portfolio'];
+            return SiteImages::normalizePortfolio($items ?: $this->seed['portfolio']);
         } catch (\Throwable) {
-            return $this->seed['portfolio'];
+            return SiteImages::normalizePortfolio($this->seed['portfolio']);
         }
     }
 
@@ -222,6 +224,25 @@ final class SiteRepository
         $stmt->execute([$data['title'], $data['slug'], $data['meta_title'], $data['meta_description'], $data['h1'], $data['body'], $data['canonical_url'], (int)!empty($data['robots_index']), (int)!empty($data['is_published'])]);
     }
 
+    public function media(): array
+    {
+        $pdo = $this->pdo();
+        if (!$pdo) {
+            return [];
+        }
+        try {
+            return $pdo->query('SELECT * FROM media ORDER BY id DESC LIMIT 80')->fetchAll();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    public function attachPortfolioImage(int $portfolioId, string $path, string $alt = '', string $kind = 'gallery'): void
+    {
+        $stmt = $this->requirePdo()->prepare('INSERT INTO portfolio_images (portfolio_id, file_path, kind, alt_text, sort_order, created_at) VALUES (?, ?, ?, ?, 100, NOW())');
+        $stmt->execute([$portfolioId, $path, $kind, $alt]);
+    }
+
     public function leads(array $filters = []): array
     {
         $pdo = $this->pdo();
@@ -261,6 +282,26 @@ final class SiteRepository
             throw new \RuntimeException($this->db->error() ?: 'Нет подключения к базе данных');
         }
         return $pdo;
+    }
+
+    /**
+     * @param list<array{q:string,a:string}> $rows
+     * @return list<array{q:string,a:string}>
+     */
+    private function publicFaqs(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $question = (string)($row['q'] ?? '');
+            foreach ($this->seed['faqs'] as $faq) {
+                $seedQuestion = (string)$faq['q'];
+                if ($seedQuestion === $question || mb_stripos($seedQuestion, mb_substr($question, 0, 28)) !== false || mb_stripos($question, mb_substr($seedQuestion, 0, 28)) !== false) {
+                    $row['a'] = $faq['a'];
+                    break;
+                }
+            }
+        }
+        unset($row);
+        return $rows;
     }
 
     private function nullableInt(mixed $value): ?int
