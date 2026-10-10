@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Support\SchemaMigrator;
 use PDO;
 use PDOException;
 
@@ -41,6 +42,11 @@ final class Database
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
+            try {
+                SchemaMigrator::apply($this->pdo);
+            } catch (\Throwable $migrationError) {
+                error_log('SchemaMigrator: ' . $migrationError->getMessage());
+            }
         } catch (PDOException $exception) {
             $this->error = 'Ошибка подключения к базе данных: ' . $exception->getMessage();
             return null;

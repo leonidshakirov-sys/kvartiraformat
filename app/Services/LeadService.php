@@ -8,6 +8,8 @@ use App\Core\Config;
 use App\Core\Database;
 use App\Core\Request;
 use App\Repositories\SiteRepository;
+use App\Support\CommercialCatalog;
+use PDO;
 
 final class LeadService
 {
@@ -15,13 +17,14 @@ final class LeadService
         private Database $db,
         private Config $config,
         private SiteRepository $repo,
-        private TelegramService $telegram
+        private TelegramService $telegram,
+        private ?UploadService $uploads = null
     ) {
     }
 
-    public function submit(array $data, Request $request): array
+    public function submit(array $data, Request $request, array $file = []): array
     {
-        $errors = $this->validate($data);
+        $errors = $this->validate($data, $file);
         if ($errors) {
             return ['ok' => false, 'errors' => $errors];
         }
@@ -36,18 +39,24 @@ final class LeadService
             return ['ok' => true, 'lead_id' => $dupe, 'duplicate' => true];
         }
 
+        $leadType = $this->leadType($data);
         $estimate = $this->estimate($data);
-        $stmt = $pdo->prepare('INSERT INTO leads (public_id, name, phone, city, repair_type, property_type, area, rooms, package_type, extras, comment, estimate_text, page_url, source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer, ip_address, user_agent, consent_version, consent_text, status, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "new", ?, NOW(), NOW())');
+        $hasLeadType = $this->hasLeadExtraColumns($pdo);
+        if ($hasLeadType) {
+            $stmt = $pdo->prepare('INSERT INTO leads (public_id, name, phone, city, repair_type, property_type, area, rooms, package_type, extras, comment, estimate_text, page_url, source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer, ip_address, user_agent, consent_version, consent_text, status, idempotency_key, lead_type, work_start, has_project, premise_condition, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "new", ?, ?, ?, ?, ?, NOW(), NOW())');
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO leads (public_id, name, phone, city, repair_type, property_type, area, rooms, package_type, extras, comment, estimate_text, page_url, source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer, ip_address, user_agent, consent_version, consent_text, status, idempotency_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "new", ?, NOW(), NOW())');
+        }
         $publicId = 'KF-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
         $settings = $this->repo->settings();
         $consentVersion = $settings['privacy_version'] ?? date('Y-m-d');
         $consentText = 'Пользователь согласился на обработку персональных данных и ознакомился с политикой. Версия: ' . $consentVersion;
-        $stmt->execute([
+        $params = [
             $publicId,
             trim((string)$data['name']),
             trim((string)$data['phone']),
             trim((string)($data['city'] ?? '')),
-            trim((string)($data['repair_type'] ?? '')),
+            trim((string)($data['repair_type'] ?? ($data['premise_condition'] ?? ''))),
             trim((string)($data['property_type'] ?? '')),
             $this->nullableFloat($data['area'] ?? null),
             trim((string)($data['rooms'] ?? '')),
@@ -68,9 +77,26 @@ final class LeadService
             $consentVersion,
             $consentText,
             $idempotency,
-        ]);
+        ];
+        if ($hasLeadType) {
+            $params[] = $leadType;
+            $params[] = trim((string)($data['work_start'] ?? ''));
+            $params[] = trim((string)($data['has_project'] ?? ''));
+            $params[] = trim((string)($data['premise_condition'] ?? ''));
+        }
+        $stmt->execute($params);
         $leadId = (int)$pdo->lastInsertId();
-        $this->telegram->queue($leadId, $this->telegramMessage($leadId, $publicId, $data, $estimate));
+
+        $attachmentNote = '';
+        if ($this->uploads && !empty($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $stored = $this->uploads->handlePrivateDocument($file);
+            if (!empty($stored['stored_name'])) {
+                $this->repo->attachLeadFile($leadId, $stored);
+                $attachmentNote = (string)$stored['original_name'];
+            }
+        }
+
+        $this->telegram->queue($leadId, $this->telegramMessage($leadId, $publicId, $data, $estimate, $leadType, $attachmentNote));
         $this->telegram->sendPending(1);
 
         return ['ok' => true, 'lead_id' => $leadId, 'public_id' => $publicId, 'estimate' => $estimate];
@@ -78,18 +104,22 @@ final class LeadService
 
     public function estimate(array $data): string
     {
+        $leadType = $this->leadType($data);
+        if ($leadType === 'commercial') {
+            return $this->commercialEstimate($data);
+        }
         $area = $this->nullableFloat($data['area'] ?? null);
         if (!$area || $area <= 0) {
             return 'Получите индивидуальный расчёт стоимости ремонта';
         }
-        $tariffs = $this->repo->tariffs();
+        $tariffs = $this->repo->tariffs('apartment');
         if (!$tariffs) {
             return 'Получите индивидуальный расчёт стоимости ремонта';
         }
         $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? '')));
         $package = mb_strtolower(trim((string)($data['package_type'] ?? '')));
         foreach ($tariffs as $tariff) {
-            if (mb_strtolower($tariff['repair_type']) === $repairType && mb_strtolower($tariff['package_type']) === $package && (int)$tariff['price_per_m2'] > 0) {
+            if (mb_strtolower((string)$tariff['repair_type']) === $repairType && mb_strtolower((string)$tariff['package_type']) === $package && (int)$tariff['price_per_m2'] > 0) {
                 $total = (int)round($area * (int)$tariff['price_per_m2']);
                 return 'Предварительно от ' . number_format($total, 0, ',', ' ') . ' ₽';
             }
@@ -97,9 +127,30 @@ final class LeadService
         return 'Получите индивидуальный расчёт стоимости ремонта';
     }
 
-    private function validate(array $data): array
+    private function commercialEstimate(array $data): string
+    {
+        $area = $this->nullableFloat($data['area'] ?? null);
+        $tariffs = $this->repo->tariffs('commercial');
+        if (!$area || $area <= 0 || !$tariffs) {
+            return CommercialCatalog::INDIVIDUAL_ESTIMATE;
+        }
+        $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? $data['premise_condition'] ?? '')));
+        $package = mb_strtolower(trim((string)($data['package_type'] ?? '')));
+        foreach ($tariffs as $tariff) {
+            $sameRepair = $repairType === '' || mb_strtolower((string)$tariff['repair_type']) === $repairType;
+            $samePackage = $package === '' || mb_strtolower((string)$tariff['package_type']) === $package;
+            if ($sameRepair && $samePackage && (int)$tariff['price_per_m2'] > 0) {
+                $total = (int)round($area * (int)$tariff['price_per_m2']);
+                return 'Предварительно от ' . number_format($total, 0, ',', ' ') . ' ₽';
+            }
+        }
+        return CommercialCatalog::INDIVIDUAL_ESTIMATE;
+    }
+
+    private function validate(array $data, array $file = []): array
     {
         $errors = [];
+        $isCommercial = $this->leadType($data) === 'commercial';
         if (!empty($data['website'])) {
             $errors[] = 'Форма отклонена антиспам-защитой.';
         }
@@ -107,14 +158,21 @@ final class LeadService
             $errors[] = 'Укажите имя.';
         }
         $phone = preg_replace('/[^0-9+]/', '', (string)($data['phone'] ?? ''));
-        if (mb_strlen($phone) < 10 || mb_strlen($phone) > 18) {
+        if (mb_strlen((string)$phone) < 10 || mb_strlen((string)$phone) > 18) {
             $errors[] = 'Укажите корректный телефон.';
         }
         if (empty($data['privacy_consent'])) {
             $errors[] = 'Необходимо согласие на обработку персональных данных.';
         }
-        if (isset($data['area']) && $data['area'] !== '' && (!$this->nullableFloat($data['area']) || (float)$data['area'] <= 0 || (float)$data['area'] > 1000)) {
-            $errors[] = 'Проверьте площадь квартиры.';
+        $maxArea = $isCommercial ? 20000 : 1000;
+        if (isset($data['area']) && $data['area'] !== '' && (!$this->nullableFloat($data['area']) || (float)$data['area'] <= 0 || (float)$data['area'] > $maxArea)) {
+            $errors[] = $isCommercial ? 'Проверьте площадь помещения.' : 'Проверьте площадь квартиры.';
+        }
+        if ($this->uploads && !empty($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $check = $this->uploads->validatePrivateDocument($file);
+            if (empty($check['ok'])) {
+                $errors[] = $check['error'] ?? 'Не удалось прикрепить файл.';
+            }
         }
         return $errors;
     }
@@ -132,9 +190,31 @@ final class LeadService
         return $id ? (int)$id : null;
     }
 
-    private function telegramMessage(int $leadId, string $publicId, array $data, string $estimate): string
+    private function telegramMessage(int $leadId, string $publicId, array $data, string $estimate, string $leadType, string $attachmentNote): string
     {
-        $line = static fn(string $label, mixed $value): string => '<b>' . htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ':</b> ' . htmlspecialchars(trim((string)$value) ?: 'не указано', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $line = static fn(string $label, mixed $value): string => '<b>' . htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ':</b> ' . htmlspecialchars(trim((string)$value) !== '' ? trim((string)$value) : 'не указано', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        if ($leadType === 'commercial') {
+            $repair = trim((string)($data['repair_type'] ?? $data['premise_condition'] ?? ''));
+            $message = "🔔 <b>КВАРТИРАФОРМАТ — КОММЕРЧЕСКИЙ РЕМОНТ</b>\n\n"
+                . $line('Тип объекта', $data['property_type'] ?? '') . "\n"
+                . $line('Площадь', ($data['area'] ?? '') !== '' ? ($data['area'] . ' м²') : '') . "\n"
+                . $line('Вид ремонта', $repair) . "\n"
+                . $line('Местоположение', $data['city'] ?? '') . "\n"
+                . $line('Начало работ', $data['work_start'] ?? '') . "\n"
+                . $line('Проект', $data['has_project'] ?? '') . "\n"
+                . $line('Имя', $data['name'] ?? '') . "\n"
+                . $line('Телефон', $data['phone'] ?? '') . "\n"
+                . $line('Комментарий', $data['comment'] ?? '') . "\n"
+                . $line('Источник', $data['source'] ?? 'site') . "\n"
+                . $line('Страница', $data['page_url'] ?? '/') . "\n"
+                . $line('Дата и время', date('d.m.Y H:i'));
+            if ($attachmentNote !== '') {
+                $message .= "\n" . $line('Файл', $attachmentNote . ' — доступен в админ-панели, без публичной ссылки');
+            }
+            $message .= "\n" . $line('Ориентир', $estimate) . "\n" . $line('ID', $publicId);
+            return $message;
+        }
+
         return "🔔 <b>КВАРТИРАФОРМАТ — НОВАЯ ЗАЯВКА</b>\n\n"
             . $line('ID', $publicId) . "\n"
             . $line('Имя', $data['name'] ?? '') . "\n"
@@ -156,6 +236,22 @@ final class LeadService
             return implode(', ', array_map(static fn($v) => trim(strip_tags((string)$v)), $extras));
         }
         return trim(strip_tags((string)$extras));
+    }
+
+    private function leadType(array $data): string
+    {
+        return (($data['lead_type'] ?? '') === 'commercial') ? 'commercial' : 'apartment';
+    }
+
+    private function hasLeadExtraColumns(PDO $pdo): bool
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+        $stmt->execute(['leads', 'lead_type']);
+        return $cached = (int)$stmt->fetchColumn() > 0;
     }
 
     private function nullableFloat(mixed $value): ?float

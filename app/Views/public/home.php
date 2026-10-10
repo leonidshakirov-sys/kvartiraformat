@@ -54,6 +54,37 @@ $priceImage = SiteImages::prices();
         </div>
     </div>
 </section>
+<section class="section commercial-home" id="commercial">
+    <div class="container">
+        <div class="commercial-spotlight">
+            <div class="media-frame commercial-photo">
+                <?= picture(\App\Support\CommercialCatalog::image('hero')) ?>
+            </div>
+            <div>
+                <span class="eyebrow">Новое направление</span>
+                <h2>Ремонт коммерческих помещений под ключ</h2>
+                <p>Ремонтируем офисы, магазины, салоны красоты и другие нежилые помещения в Москве и Московской области. Выполняем отделочные и комплексные ремонтные работы. Рассчитаем стоимость с учётом площади, состояния объекта и технического задания.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="/remont-kommercheskih-pomescheniy/">Подробнее</a>
+                    <a class="btn btn-outline" href="/remont-kommercheskih-pomescheniy/#calculator">Рассчитать стоимость</a>
+                </div>
+            </div>
+        </div>
+        <div class="cards service-cards commercial-cards">
+            <?php foreach ($commercialServices as $item): $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1068]; ?>
+                <article class="card service-card">
+                    <div class="media-frame card-image"><?= picture($cardImage) ?></div>
+                    <h3><?= e($item['title']) ?></h3>
+                    <p><?= e($item['short'] ?? '') ?></p>
+                    <div class="card-actions">
+                        <a class="btn btn-small" href="/<?= e($item['slug']) ?>/">Подробнее</a>
+                        <a class="btn btn-small btn-outline" href="/<?= e($item['slug']) ?>/#calculator">Рассчитать</a>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
 <section class="section alt" id="prices">
     <div class="container">
         <div class="section-head">

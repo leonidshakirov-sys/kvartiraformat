@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Response;
 use App\Core\View;
 use App\Repositories\SiteRepository;
+use App\Support\CommercialCatalog;
 
 final class PublicController
 {
@@ -23,12 +24,13 @@ final class PublicController
             'h1' => 'Ремонт квартир под ключ в Москве и Московской области',
             'canonical' => '/',
             'settings' => $settings,
-            'services' => $this->repo->services(),
-            'advantages' => $this->repo->advantages(),
-            'portfolio' => $this->repo->portfolio(),
+            'services' => $this->repo->services('apartment'),
+            'commercialServices' => $this->repo->services('commercial'),
+            'advantages' => $this->repo->advantages('apartment'),
+            'portfolio' => $this->repo->portfolio('apartment'),
             'geoPages' => $this->repo->geoPages(true),
-            'faqs' => $this->repo->faqs(),
-            'tariffs' => $this->repo->tariffs(),
+            'faqs' => $this->repo->faqs('apartment'),
+            'tariffs' => $this->repo->tariffs('apartment'),
             'preloadImage' => '/assets/images/hero/living-room.webp',
             'ogImage' => '/assets/images/hero/living-room.webp',
         ]));
@@ -71,9 +73,74 @@ final class PublicController
             'h1' => $service['h1'] ?? $service['title'],
             'canonical' => '/uslugi/' . $slug . '/',
             'service' => $service,
-            'services' => $this->repo->services(),
-            'faqs' => $this->repo->faqs(),
+            'services' => $this->repo->services('apartment'),
+            'faqs' => $this->repo->faqs('apartment'),
             'settings' => $this->repo->settings(),
+        ]));
+    }
+
+    public function commercialHub(): string
+    {
+        $settings = $this->repo->settings();
+        if (isset($settings['commercial_hub_published']) && (string)$settings['commercial_hub_published'] === '0') {
+            return $this->notFound();
+        }
+        $hub = CommercialCatalog::hub();
+        $hero = CommercialCatalog::image('hero');
+        return $this->view->render('public/commercial', $this->common([
+            'metaTitle' => $settings['commercial_meta_title'] ?? $hub['meta_title'],
+            'metaDescription' => $settings['commercial_meta_description'] ?? $hub['meta_description'],
+            'h1' => $settings['commercial_h1'] ?? $hub['h1'],
+            'intro' => $settings['commercial_intro'] ?? $hub['intro'],
+            'canonical' => '/' . CommercialCatalog::HUB_SLUG . '/',
+            'settings' => $settings,
+            'commercialServices' => $this->repo->services('commercial'),
+            'apartmentServices' => $this->repo->services('apartment'),
+            'advantages' => $this->repo->advantages('commercial'),
+            'faqs' => $this->repo->faqs('commercial'),
+            'portfolio' => $this->repo->portfolio('commercial'),
+            'works' => CommercialCatalog::commonWorks(),
+            'stages' => CommercialCatalog::stages(),
+            'cities' => CommercialCatalog::cities(),
+            'heroImage' => $hero,
+            'processImage' => CommercialCatalog::image('process'),
+            'propertyType' => '',
+            'calcHref' => '#calculator',
+            'leadHref' => '#lead-form',
+            'preloadImage' => $hero['src'],
+            'ogImage' => $hero['src'],
+        ]));
+    }
+
+    public function commercialService(string $slug): string
+    {
+        $service = $this->repo->commercialService($slug);
+        if (!$service) {
+            return $this->notFound();
+        }
+        $hero = CommercialCatalog::image((string)($service['image_key'] ?? 'hero'));
+        if (!empty($service['image_path'])) {
+            $hero['src'] = (string)$service['image_path'];
+            $hero['alt'] = (string)($service['image_alt'] ?: $hero['alt']);
+        }
+        return $this->view->render('public/commercial-service', $this->common([
+            'metaTitle' => $service['meta_title'] ?? ($service['title'] . ' | КвартираФормат'),
+            'metaDescription' => $service['meta_description'] ?? excerpt((string)($service['short'] ?? ''), 150),
+            'h1' => $service['h1'] ?? $service['title'],
+            'canonical' => '/' . $slug . '/',
+            'service' => $service,
+            'commercialServices' => $this->repo->services('commercial'),
+            'apartmentServices' => $this->repo->services('apartment'),
+            'faqs' => $this->repo->faqs('commercial'),
+            'stages' => CommercialCatalog::stages(),
+            'heroImage' => $hero,
+            'processImage' => CommercialCatalog::image('process'),
+            'propertyType' => $service['property_type'] ?? '',
+            'calcHref' => '#calculator',
+            'leadHref' => '#lead-form',
+            'settings' => $this->repo->settings(),
+            'preloadImage' => $hero['src'],
+            'ogImage' => $hero['src'],
         ]));
     }
 
@@ -90,8 +157,8 @@ final class PublicController
             'h1' => $geo['h1'] ?? "Ремонт квартир под ключ в $name",
             'canonical' => '/remont-kvartir/' . $slug . '/',
             'geo' => $geo,
-            'services' => $this->repo->services(),
-            'faqs' => $this->repo->faqs(),
+            'services' => $this->repo->services('apartment'),
+            'faqs' => $this->repo->faqs('apartment'),
             'settings' => $this->repo->settings(),
         ]));
     }
@@ -137,8 +204,14 @@ final class PublicController
         $settings = $this->repo->settings();
         $base = rtrim('https://' . ($settings['domain'] ?? 'kvartiraformat.ru'), '/');
         $urls = ['/', '/contacts/', '/portfolio/', '/privacy-policy/', '/personal-data-consent/', '/cookies/'];
-        foreach ($this->repo->services() as $service) {
+        if (($settings['commercial_hub_published'] ?? '1') !== '0') {
+            $urls[] = '/' . CommercialCatalog::HUB_SLUG . '/';
+        }
+        foreach ($this->repo->services('apartment') as $service) {
             $urls[] = '/uslugi/' . $service['slug'] . '/';
+        }
+        foreach ($this->repo->services('commercial') as $service) {
+            $urls[] = '/' . $service['slug'] . '/';
         }
         foreach ($this->repo->geoPages(true) as $geo) {
             if (($geo['priority'] ?? 1) <= 1 || !empty($geo['is_published'])) {

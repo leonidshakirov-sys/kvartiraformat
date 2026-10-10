@@ -31,6 +31,8 @@ return [
         'lead_duplicate_window_minutes' => 15,
         'lead_retention_days' => 365,
         'upload_max_bytes' => 5242880,
+        'document_max_bytes' => 8388608,
         'allowed_image_extensions' => ['jpg', 'jpeg', 'png', 'webp', 'avif'],
+        'allowed_document_extensions' => ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx'],
     ],
 ];

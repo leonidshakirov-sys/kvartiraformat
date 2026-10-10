@@ -16,6 +16,7 @@
     <form method="post" enctype="multipart/form-data" class="admin-form grid wide">
         <?= App\Core\Csrf::field() ?>
         <input type="hidden" name="action" value="save_portfolio">
+        <input type="hidden" name="category" value="apartment">
         <label>Название<input name="title" required></label>
         <label>Город<input name="city"></label>
         <label>Район/ЖК<input name="district"></label>
