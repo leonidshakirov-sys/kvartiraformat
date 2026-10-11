@@ -19,7 +19,7 @@
         <div class="section-head">
             <span class="eyebrow">Услуги</span>
             <h2>Категории ремонта квартир</h2>
-            <p>Существующие страницы услуг сохранены по адресам /uslugi/. Городские страницы /remont-kvartir/{город}/ тоже на месте.</p>
+            <p>Косметический, капитальный и ремонт под ключ, а также отдельные страницы по типу жилья и санузлам.</p>
         </div>
         <div class="cards service-cards">
             <?php foreach ($services as $service): $card = $service; $cardImage = SiteImages::serviceCard($service); $cardHref = '/uslugi/' . $service['slug'] . '/'; $cardCalcHref = '/uslugi/' . $service['slug'] . '/#calculator'; require __DIR__ . '/../partials/service-card.php'; endforeach; ?>
@@ -36,7 +36,7 @@
         <div class="geo-list">
             <a href="/remont-domov/">Ремонт домов</a>
             <a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a>
-            <?php foreach ($houseServices ?? [] as $item): ?><a href="/<?= e($item['slug']) ?>/"><?= e($item['title']) ?></a><?php endforeach; ?>
+            <?php foreach ($houseServices ?? [] as $item): ?><a href="<?= e($item['url'] ?? \App\Support\HouseCatalog::path((string)$item['slug'])) ?>"><?= e($item['title']) ?></a><?php endforeach; ?>
         </div>
     </div>
 </section>

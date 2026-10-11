@@ -32,7 +32,7 @@ $titles = [
                 <fieldset class="full">
                     <legend>Что необходимо отремонтировать?</legend>
                     <label><input type="radio" name="calc_direction" value="apartment" <?= $calcLeadType === 'apartment' ? 'checked' : '' ?> <?= $lockDirection ? 'disabled' : '' ?>>Квартиру</label>
-                    <label><input type="radio" name="calc_direction" value="house" <?= $calcLeadType === 'house' ? 'checked' : '' ?> <?= $lockDirection ? 'disabled' : '' ?>>Частный дом</label>
+                    <label><input type="radio" name="calc_direction" value="house" <?= $calcLeadType === 'house' ? 'checked' : '' ?> <?= $lockDirection ? 'disabled' : '' ?>>Дом</label>
                     <label><input type="radio" name="calc_direction" value="commercial" <?= $calcLeadType === 'commercial' ? 'checked' : '' ?> <?= $lockDirection ? 'disabled' : '' ?>>Коммерческое помещение</label>
                 </fieldset>
 
@@ -64,6 +64,13 @@ $titles = [
                         <option value="Комплексный ремонт">Комплексный ремонт</option>
                     </select>
                 </fieldset>
+                <fieldset data-mode="apartment">
+                    <legend>Дополнительные работы</legend>
+                    <label><input type="checkbox" name="extras[]" value="Демонтаж">Демонтаж</label>
+                    <label><input type="checkbox" name="extras[]" value="Электрика">Электрика</label>
+                    <label><input type="checkbox" name="extras[]" value="Сантехника">Сантехника</label>
+                    <label><input type="checkbox" name="extras[]" value="Выравнивание стен">Выравнивание стен</label>
+                </fieldset>
 
                 <fieldset data-mode="house">
                     <legend>Тип дома</legend>
@@ -90,6 +97,14 @@ $titles = [
                     <label><input type="radio" name="house_repair_type" value="Косметический" checked>Косметический</label>
                     <label><input type="radio" name="house_repair_type" value="Капитальный">Капитальный</label>
                     <label><input type="radio" name="house_repair_type" value="Под ключ">Под ключ</label>
+                </fieldset>
+                <fieldset data-mode="house">
+                    <legend>Дополнительные работы</legend>
+                    <label><input type="checkbox" name="extras[]" value="Лестница">Лестница</label>
+                    <label><input type="checkbox" name="extras[]" value="Санузлы">Санузлы</label>
+                    <label><input type="checkbox" name="extras[]" value="Электромонтаж">Электромонтаж</label>
+                    <label><input type="checkbox" name="extras[]" value="Сантехника">Сантехника</label>
+                    <label><input type="checkbox" name="extras[]" value="Отделка после строительства">Отделка после строительства</label>
                 </fieldset>
 
                 <fieldset data-mode="commercial">
@@ -118,12 +133,16 @@ $titles = [
                     <label><input type="checkbox" name="extras[]" value="Комплексный ремонт">Комплексный ремонт</label>
                 </fieldset>
                 <fieldset data-mode="commercial">
-                    <legend>Наличие технического задания</legend>
+                    <legend>Наличие проекта</legend>
                     <select name="has_project">
                         <option value="Нет">Нет</option>
                         <option value="Есть проект">Есть проект</option>
                         <option value="Есть эскиз или ТЗ">Есть эскиз или ТЗ</option>
                     </select>
+                </fieldset>
+                <fieldset data-mode="commercial">
+                    <legend>Особые требования</legend>
+                    <textarea name="special_requirements" rows="3" placeholder="График работ, управляющая компания, мокрые зоны, нагрузка на пол"></textarea>
                 </fieldset>
 
                 <fieldset class="full">
@@ -140,7 +159,7 @@ $titles = [
             <input type="hidden" name="area" data-sync-area>
             <div class="calc-result">
                 <strong data-estimate>Индивидуальный расчёт</strong>
-                <p>Для домов цена не считается по квартирному тарифу. Точная смета готовится после осмотра.</p>
+                <p>Ориентир появляется только по утверждённому тарифу. Точная смета готовится после осмотра.</p>
                 <label class="consent"><input type="checkbox" name="privacy_consent" value="1" required> Согласен(на) на обработку персональных данных.</label>
                 <button class="btn btn-primary" type="submit">Получить расчёт</button>
                 <p class="form-result" data-form-result></p>

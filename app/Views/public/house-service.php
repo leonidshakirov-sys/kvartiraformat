@@ -1,5 +1,7 @@
 <?php
+use App\Support\HouseCatalog;
 $heroImage = $heroImage ?? ['src' => $service['image_path'], 'alt' => $service['image_alt'] ?? $service['title'], 'width' => 1600, 'height' => 900];
+$price = service_price($service);
 ?>
 <section class="page-hero has-photo">
     <div class="page-hero-media"><?= picture($heroImage, '', 'eager') ?></div>
@@ -11,8 +13,11 @@ $heroImage = $heroImage ?? ['src' => $service['image_path'], 'alt' => $service['
         </nav>
         <h1><?= e($h1) ?></h1>
         <p><?= e($service['intro'] ?? $service['short'] ?? '') ?></p>
-        <p><strong><?= e(format_price(null)) ?></strong></p>
-        <a class="btn btn-primary" href="#calculator">Рассчитать стоимость</a>
+        <p><strong class="card-price"><?= e($price['label']) ?></strong><?php if ($price['note'] !== ''): ?> <small class="price-note"><?= e($price['note']) ?></small><?php endif; ?></p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="#calculator">Рассчитать стоимость</a>
+            <a class="btn btn-outline" href="#lead-form">Заказать консультацию</a>
+        </div>
     </div>
 </section>
 <section class="section">
@@ -20,7 +25,6 @@ $heroImage = $heroImage ?? ['src' => $service['image_path'], 'alt' => $service['
         <div class="media-frame article-photo"><?= picture(['src' => $service['image_path'], 'alt' => $service['image_alt'] ?? $service['title'], 'width' => 1600, 'height' => 1068]) ?></div>
         <h2>Состав работ</h2>
         <?= $service['body'] ?? '' ?>
-        <p class="muted">Фотография носит иллюстративный характер и не является объектом, выполненным компанией КвартираФормат.</p>
     </div>
 </section>
 <section class="section alt">
@@ -51,11 +55,11 @@ $heroImage = $heroImage ?? ['src' => $service['image_path'], 'alt' => $service['
         </div>
     </div>
 </section>
-<section class="section cta">
+<section class="section cta" id="lead-form">
     <div class="container cta-grid">
         <div>
             <h2>Заявка на эту услугу</h2>
-            <p>Можно приложить план, фотографии или техническое задание.</p>
+            <p>Можно приложить план, фотографии помещений или проект.</p>
         </div>
         <?php $leadType = 'house'; require __DIR__ . '/../partials/lead-form.php'; ?>
     </div>
@@ -65,8 +69,13 @@ $heroImage = $heroImage ?? ['src' => $service['image_path'], 'alt' => $service['
         <h2>Другие услуги по домам</h2>
         <div class="geo-list">
             <?php foreach ($houseServices as $item): ?>
-                <a href="/<?= e($item['slug']) ?>/"><?= e($item['title']) ?></a>
+                <a href="<?= e($item['url'] ?? HouseCatalog::path((string)$item['slug'])) ?>"><?= e($item['title']) ?></a>
             <?php endforeach; ?>
+        </div>
+        <h2>Другие направления</h2>
+        <div class="geo-list">
+            <a href="/remont-kvartir/">Ремонт квартир</a>
+            <a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a>
         </div>
     </div>
 </section>

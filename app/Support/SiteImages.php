@@ -186,7 +186,7 @@ final class SiteImages
                 'repair_type' => $image['repair_type'],
                 'cost' => '',
                 'duration' => '',
-                'works' => 'Иллюстративное изображение. Не является фотографией объекта, выполненного компанией КвартираФормат.',
+                'works' => '',
                 'is_demo' => 1,
                 'image_key' => $image['key'],
                 'images' => [],
@@ -219,8 +219,8 @@ final class SiteImages
                 'page' => ['src' => '/assets/images/services/turnkey-page.webp', 'alt' => 'Готовый современный интерьер квартиры после ремонта под ключ', 'width' => 1600, 'height' => 900],
             ],
             'kapitalnyy-remont' => [
-                'card' => ['src' => '/assets/images/services/capital.webp', 'alt' => 'Капитальный ремонт квартиры', 'width' => 1200, 'height' => 840],
-                'page' => ['src' => '/assets/images/services/capital-page.webp', 'alt' => 'Черновые и отделочные работы при капитальном ремонте', 'width' => 1600, 'height' => 900],
+                'card' => ['src' => '/assets/images/services/capital.webp', 'alt' => 'Стяжка и черновые работы при капитальном ремонте', 'width' => 1200, 'height' => 840],
+                'page' => ['src' => '/assets/images/services/capital-page.webp', 'alt' => 'Штукатурка стен при капитальном ремонте', 'width' => 1600, 'height' => 900],
             ],
             'kosmeticheskiy-remont' => [
                 'card' => ['src' => '/assets/images/services/cosmetic.webp', 'alt' => 'Покраска стен при косметическом ремонте', 'width' => 1200, 'height' => 840],

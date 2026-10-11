@@ -23,8 +23,8 @@
             <article class="mini-card">
                 <img class="service-preview" src="<?= e($service['image_path'] ?? '') ?>" alt="<?= e($service['image_alt'] ?? '') ?>">
                 <strong><?= e($service['title']) ?></strong>
-                <small>/<?= e($service['slug']) ?>/ · <?= !empty($service['is_published']) ? 'опубликовано' : 'черновик' ?></small>
-                <span>ID <?= (int)($service['id'] ?? 0) ?> · <?= e(format_price(isset($service['price']) ? (int)$service['price'] : null)) ?></span>
+                <small><?= e($service['url'] ?? \App\Support\HouseCatalog::path((string)$service['slug'])) ?> · <?= !empty($service['is_published']) ? 'опубликовано' : 'черновик' ?></small>
+                <span>ID <?= (int)($service['id'] ?? 0) ?> · <?= e(service_price($service)['label']) ?></span>
             </article>
         <?php endforeach; ?>
     </div>
@@ -35,7 +35,7 @@
         <input type="hidden" name="category" value="house">
         <label>ID<input name="id" type="number"></label>
         <label>Название<input name="title" required></label>
-        <label>Slug<input name="slug" required placeholder="remont-domov-pod-klyuch"></label>
+        <label>Slug<input name="slug" required placeholder="pod-klyuch"></label>
         <label>Кратко<input name="short" maxlength="200"></label>
         <label>Цена за м²<input name="price" type="number" placeholder="Пусто = индивидуальный расчёт"></label>
         <label>Путь к фото<input name="image_path" placeholder="/assets/images/houses/turnkey.webp"></label>
@@ -67,9 +67,17 @@
     <p>Пока цены не утверждены, на сайте показывается «Индивидуальный расчёт». Не копируйте сюда квартирные тарифы.</p>
     <div class="table-wrap">
         <table>
-            <tr><th>ID</th><th>Вид</th><th>Пакет</th><th>Цена/м²</th><th>Активен</th></tr>
+            <tr><th>ID</th><th>Slug</th><th>Вид</th><th>Пакет</th><th>Цена/м²</th><th>Утверждён</th><th>Активен</th></tr>
             <?php foreach ($houseTariffs ?? [] as $t): ?>
-                <tr><td><?= (int)($t['id'] ?? 0) ?></td><td><?= e($t['repair_type'] ?? '') ?></td><td><?= e($t['package_type'] ?? '') ?></td><td><?= e((string)($t['price_per_m2'] ?? '')) ?></td><td><?= !empty($t['is_active']) ? 'Да' : 'Нет' ?></td></tr>
+                <tr>
+                    <td><?= (int)($t['id'] ?? 0) ?></td>
+                    <td><?= e((string)($t['service_slug'] ?? '')) ?></td>
+                    <td><?= e($t['repair_type'] ?? '') ?></td>
+                    <td><?= e($t['package_type'] ?? '') ?></td>
+                    <td><?= e((string)($t['price_per_m2'] ?? '')) ?></td>
+                    <td><?= !empty($t['is_approved']) ? 'Да' : 'Нет' ?></td>
+                    <td><?= !empty($t['is_active']) ? 'Да' : 'Нет' ?></td>
+                </tr>
             <?php endforeach; ?>
         </table>
     </div>
@@ -80,10 +88,12 @@
         <label>ID<input name="id" type="number"></label>
         <label>Вид ремонта<input name="repair_type" required></label>
         <label>Пакет<input name="package_type" required></label>
-        <label>Цена за м²<input name="price_per_m2" type="number" value="0"></label>
-        <label>Примечание<input name="note"></label>
+        <label>Цена за м²<input name="price_per_m2" type="number"></label>
+        <label>Slug услуги<input name="service_slug" placeholder="kapitalnyy"></label>
+        <label>Примечание<input name="note" value="Стоимость работ без материалов"></label>
         <label>Сортировка<input name="sort_order" type="number" value="100"></label>
         <label><input type="checkbox" name="is_active" value="1" checked> Активен</label>
+        <label><input type="checkbox" name="is_approved" value="1"> Утвердить цену для публикации</label>
         <button class="btn btn-primary">Сохранить тариф</button>
     </form>
 </section>

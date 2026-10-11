@@ -43,6 +43,13 @@ final class LeadService
         }
 
         $leadType = $this->leadType($data);
+        if (trim((string)($data['premise_condition'] ?? '')) === '' && trim((string)($data['house_condition'] ?? '')) !== '') {
+            $data['premise_condition'] = trim((string)$data['house_condition']);
+        }
+        $special = trim((string)($data['special_requirements'] ?? ''));
+        if ($special !== '') {
+            $data['comment'] = trim((string)($data['comment'] ?? '') . "\nОсобые требования: " . $special);
+        }
         $estimate = $this->estimate($data);
         $hasLeadType = $this->hasLeadExtraColumns($pdo);
         if ($hasLeadType) {
@@ -122,28 +129,34 @@ final class LeadService
     {
         $leadType = $this->leadType($data);
         if ($leadType === 'house') {
-            return HouseCatalog::INDIVIDUAL_ESTIMATE;
+            return $this->pricedEstimate($data, 'house') ?? HouseCatalog::INDIVIDUAL_ESTIMATE;
         }
         if ($leadType === 'commercial') {
-            return $this->commercialEstimate($data);
+            return $this->pricedEstimate($data, 'commercial') ?? CommercialCatalog::INDIVIDUAL_ESTIMATE;
         }
+        return $this->pricedEstimate($data, 'apartment') ?? 'Индивидуальный расчёт';
+    }
+
+    private function pricedEstimate(array $data, string $category): ?string
+    {
         $area = $this->nullableFloat($data['area'] ?? null);
         if (!$area || $area <= 0) {
-            return 'Получите индивидуальный расчёт стоимости ремонта';
+            return null;
         }
-        $tariffs = $this->repo->tariffs('apartment');
-        if (!$tariffs) {
-            return 'Получите индивидуальный расчёт стоимости ремонта';
-        }
-        $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? '')));
-        $package = mb_strtolower(trim((string)($data['package_type'] ?? '')));
-        foreach ($tariffs as $tariff) {
-            if (mb_strtolower((string)$tariff['repair_type']) === $repairType && mb_strtolower((string)$tariff['package_type']) === $package && (int)$tariff['price_per_m2'] > 0) {
+        $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? $data['premise_condition'] ?? '')));
+        $package = mb_strtolower(trim((string)($data['package_type'] ?? 'Только работы')));
+        foreach ($this->repo->tariffs($category) as $tariff) {
+            if ((int)($tariff['is_approved'] ?? 0) !== 1 || (int)($tariff['price_per_m2'] ?? 0) <= 0) {
+                continue;
+            }
+            $sameRepair = $repairType === '' || mb_strtolower((string)$tariff['repair_type']) === $repairType;
+            $samePackage = $package === '' || mb_strtolower((string)$tariff['package_type']) === $package;
+            if ($sameRepair && $samePackage) {
                 $total = (int)round($area * (int)$tariff['price_per_m2']);
                 return 'Предварительно от ' . number_format($total, 0, ',', ' ') . ' ₽';
             }
         }
-        return 'Получите индивидуальный расчёт стоимости ремонта';
+        return null;
     }
 
     private function commercialEstimate(array $data): string

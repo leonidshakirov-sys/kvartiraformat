@@ -65,7 +65,7 @@ final class SiteRepository
         };
         $pdo = $this->pdo();
         if (!$pdo) {
-            return $fallback;
+            return array_map(fn(array $row) => $this->applyPublicPrice($row, $category ?: 'apartment'), $fallback);
         }
         try {
             $where = [];
@@ -88,16 +88,14 @@ final class SiteRepository
             $stmt->execute($params);
             $rows = $stmt->fetchAll();
             if ($category === 'commercial') {
-                return $this->mergeCommercialRows($rows ?: [], $publishedOnly);
+                return array_map(fn(array $row) => $this->applyPublicPrice($row, 'commercial'), $this->mergeCommercialRows($rows ?: [], $publishedOnly));
             }
             if ($category === 'house') {
-                return $this->mergeHouseRows($rows ?: [], $publishedOnly);
+                return array_map(fn(array $row) => $this->applyPublicPrice($row, 'house'), $this->mergeHouseRows($rows ?: [], $publishedOnly));
             }
             $rows = $rows ?: $fallback;
             foreach ($rows as &$row) {
-                if (empty($row['price'])) {
-                    $row['price'] = StartingPrices::forSlug((string)($row['slug'] ?? ''));
-                }
+                $row = $this->applyPublicPrice($row, 'apartment');
             }
             unset($row);
             return $rows;
@@ -124,7 +122,7 @@ final class SiteRepository
         }
         $pdo = $this->pdo();
         if (!$pdo) {
-            return $catalog;
+            return $this->applyPublicPrice($catalog, 'house');
         }
         try {
             $stmt = $pdo->prepare('SELECT * FROM services WHERE slug = ? LIMIT 1');
@@ -137,9 +135,9 @@ final class SiteRepository
             if ($publishedOnly && isset($merged['is_published']) && (int)$merged['is_published'] === 0) {
                 return null;
             }
-            return $merged;
+            return $this->applyPublicPrice($merged, 'house');
         } catch (\Throwable) {
-            return $catalog;
+            return $this->applyPublicPrice($catalog, 'house');
         }
     }
 
@@ -318,12 +316,7 @@ final class SiteRepository
 
     public function tariffs(?string $category = 'apartment'): array
     {
-        $fallback = [];
-        foreach (StartingPrices::tariffs() as $tariff) {
-            if ($tariff['category'] === ($category ?: 'apartment')) {
-                $fallback[] = $tariff + ['is_active' => 1];
-            }
-        }
+        $fallback = StartingPrices::tariffs($category ?: 'apartment');
         $pdo = $this->pdo();
         if (!$pdo) {
             return $fallback;
@@ -504,9 +497,13 @@ final class SiteRepository
      */
     private function publicFaqs(array $rows): array
     {
-        foreach ($rows as &$row) {
+        $clean = [];
+        foreach ($rows as $row) {
             $question = (string)($row['q'] ?? '');
             $answer = (string)($row['a'] ?? '');
+            if (preg_match('/админ|SEO|Telegram|базе данных|программ|изменить телефон|страницу под конкретный город/ui', $question . ' ' . $answer)) {
+                continue;
+            }
             $best = null;
             $bestScore = 0.0;
             foreach ($this->seed['faqs'] as $faq) {
@@ -516,12 +513,12 @@ final class SiteRepository
                     $best = (string)$faq['a'];
                 }
             }
-            if ($best && ($bestScore >= 55 || preg_match('/админ/ui', $answer))) {
+            if ($best && $bestScore >= 55) {
                 $row['a'] = $best;
             }
+            $clean[] = $row;
         }
-        unset($row);
-        return $rows;
+        return $clean ?: $this->seed['faqs'];
     }
 
     /**
@@ -609,6 +606,52 @@ final class SiteRepository
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?');
         $stmt->execute([$table]);
         return (int)$stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @return array<string,mixed>
+     */
+    private function applyPublicPrice(array $row, string $category): array
+    {
+        $slug = (string)($row['slug'] ?? '');
+        $tariff = $this->tariffBySlug($slug, $category);
+        if ($tariff) {
+            $row['price'] = isset($tariff['price_per_m2']) && $tariff['price_per_m2'] !== '' && $tariff['price_per_m2'] !== null
+                ? (int)$tariff['price_per_m2']
+                : null;
+            $row['price_approved'] = (int)($tariff['is_approved'] ?? 0) === 1;
+        } else {
+            $row['price_approved'] = false;
+        }
+        if ($category === 'house') {
+            $row['url'] = HouseCatalog::path($slug);
+        } elseif ($category === 'commercial') {
+            $row['url'] = '/' . $slug . '/';
+        } else {
+            $row['url'] = '/uslugi/' . $slug . '/';
+        }
+        return $row;
+    }
+
+    /**
+     * @return array<string,mixed>|null
+     */
+    public function tariffBySlug(string $slug, ?string $category = null): ?array
+    {
+        $catalog = StartingPrices::item($slug);
+        $cat = $category ?: ($catalog['category'] ?? null);
+        foreach ($this->tariffs($cat) as $tariff) {
+            $tariffSlug = (string)($tariff['slug'] ?? $tariff['service_slug'] ?? '');
+            if ($tariffSlug !== '' && $tariffSlug === $slug) {
+                return $tariff;
+            }
+            if ($catalog && mb_strtolower((string)($tariff['repair_type'] ?? '')) === mb_strtolower((string)$catalog['repair_type'])
+                && ($tariff['category'] ?? $cat) === $catalog['category']) {
+                return $tariff + ['slug' => $slug];
+            }
+        }
+        return $catalog;
     }
 
     private function nullableInt(mixed $value): ?int

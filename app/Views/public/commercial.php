@@ -23,7 +23,7 @@ $processImage = $processImage ?? $heroImage;
         <div class="section-head">
             <span class="eyebrow">Направления</span>
             <h2>Основные виды коммерческих помещений</h2>
-            <p>Офисы, магазины, салоны, кафе и склады. Фотографии показывают тип помещения и не выдаются за выполненные объекты компании.</p>
+            <p>Офисы, магазины, салоны, кафе, склады и помещения свободного назначения.</p>
         </div>
         <div class="cards service-cards">
             <?php foreach ($commercialServices as $item): $card = $item; $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1000]; $cardHref = '/' . $item['slug'] . '/'; $cardCalcHref = '/' . $item['slug'] . '/#calculator'; require __DIR__ . '/../partials/service-card.php'; endforeach; ?>
@@ -82,12 +82,8 @@ $processImage = $processImage ?? $heroImage;
     <div class="container">
         <div class="section-head">
             <span class="eyebrow">Примеры</span>
-            <h2>Примеры помещений и работ</h2>
-            <?php if (!empty($portfolio)): ?>
-                <p>Ниже — опубликованные объекты коммерческого портфолио.</p>
-            <?php else: ?>
-                <p>Показываем интерьеры разных типов помещений как ориентир по задаче. Когда появятся съёмки выполненных объектов, заменим иллюстрации реальными работами.</p>
-            <?php endif; ?>
+            <h2>Примеры интерьеров и вариантов отделки</h2>
+            <p>Примеры помещений разного назначения. Когда появятся съёмки выполненных объектов, опубликуем раздел «Наши работы».</p>
         </div>
         <?php if (!empty($portfolio)): ?>
             <div class="portfolio-grid">
@@ -99,7 +95,6 @@ $processImage = $processImage ?? $heroImage;
                     <article class="card">
                         <div class="media-frame card-image"><?= picture($cardImage) ?></div>
                         <h3><?= e($item['title']) ?></h3>
-                        <p class="muted">Иллюстративное изображение</p>
                     </article>
                 <?php endforeach; ?>
             </div>
@@ -148,6 +143,8 @@ $processImage = $processImage ?? $heroImage;
     <div class="container">
         <h2>Другие услуги</h2>
         <div class="geo-list">
+            <a href="/remont-kvartir/">Ремонт квартир</a>
+            <a href="/remont-domov/">Ремонт домов</a>
             <?php foreach ($apartmentServices as $item): ?>
                 <a href="/uslugi/<?= e($item['slug']) ?>/"><?= e($item['title']) ?></a>
             <?php endforeach; ?>

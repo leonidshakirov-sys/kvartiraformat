@@ -22,7 +22,7 @@ final class PublicController
         return $this->view->render('public/home', $this->common([
             'metaTitle' => 'Ремонт квартир, домов и коммерческих помещений в Москве | КвартираФормат',
             'metaDescription' => 'Ремонт квартир, частных домов и коммерческих помещений под ключ в Москве и МО. Косметический, капитальный и комплексный ремонт. Рассчитаем стоимость по вашей планировке и техническому заданию.',
-            'h1' => 'Ремонт квартир, домов и коммерческих помещений под ключ в Москве и Московской области',
+            'h1' => 'Ремонт квартир, домов и коммерческих помещений под ключ',
             'canonical' => '/',
             'settings' => $settings,
             'services' => $this->repo->services('apartment'),
@@ -55,9 +55,9 @@ final class PublicController
     public function portfolio(): string
     {
         return $this->view->render('public/portfolio', $this->common([
-            'metaTitle' => 'Портфолио ремонтов квартир | КвартираФормат',
-            'metaDescription' => 'Примеры интерьеров после ремонта квартир. Иллюстративные фото отмечены и не выдаются за выполненные объекты компании.',
-            'h1' => 'Наши работы',
+            'metaTitle' => 'Примеры интерьеров и вариантов отделки | КвартираФормат',
+            'metaDescription' => 'Примеры интерьеров и вариантов отделки квартир, домов и коммерческих помещений.',
+            'h1' => 'Примеры интерьеров и вариантов отделки',
             'canonical' => '/portfolio/',
             'portfolio' => $this->repo->portfolio(),
             'settings' => $this->repo->settings(),
@@ -129,6 +129,9 @@ final class PublicController
             'faqs' => $this->repo->faqs('house'),
             'portfolio' => $this->repo->portfolio('house'),
             'stages' => HouseCatalog::stages(),
+            'works' => HouseCatalog::works(),
+            'geoPages' => $this->repo->geoPages(true),
+            'tariffs' => $this->repo->tariffs('house'),
             'heroImage' => $hero,
             'calcLeadType' => 'house',
             'leadType' => 'house',
@@ -152,7 +155,7 @@ final class PublicController
             'metaTitle' => $service['meta_title'] ?? ($service['title'] . ' | КвартираФормат'),
             'metaDescription' => $service['meta_description'] ?? excerpt((string)($service['short'] ?? ''), 150),
             'h1' => $service['h1'] ?? $service['title'],
-            'canonical' => '/' . $slug . '/',
+            'canonical' => HouseCatalog::path($slug),
             'service' => $service,
             'houseServices' => $this->repo->services('house'),
             'apartmentServices' => $this->repo->services('apartment'),
@@ -309,7 +312,7 @@ final class PublicController
             $urls[] = '/uslugi/' . $service['slug'] . '/';
         }
         foreach ($this->repo->services('house') as $service) {
-            $urls[] = '/' . $service['slug'] . '/';
+            $urls[] = HouseCatalog::path((string)$service['slug']);
         }
         foreach ($this->repo->services('commercial') as $service) {
             $urls[] = '/' . $service['slug'] . '/';
@@ -338,6 +341,11 @@ final class PublicController
         $domain = $settings['domain'] ?? 'kvartiraformat.ru';
         $txt = "User-agent: *\nDisallow: /admin/\nDisallow: /storage/\nDisallow: /config/\nAllow: /uploads/\nSitemap: https://$domain/sitemap.xml\n";
         Response::text($txt, 'text/plain; charset=utf-8');
+    }
+
+    public function redirect(string $url): never
+    {
+        Response::redirect($url, 301);
     }
 
     public function notFound(): string

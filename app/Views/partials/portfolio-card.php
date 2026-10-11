@@ -1,14 +1,13 @@
 <?php
 use App\Support\SiteImages;
 $image = SiteImages::portfolio($item, (int)($index ?? 0));
-$isDemo = !empty($item['is_demo']);
 $headingTag = $headingTag ?? 'h3';
 ?>
 <article class="portfolio-card">
     <div class="media-frame portfolio-photo">
         <?= picture($image) ?>
     </div>
-    <?php if ($isDemo): ?><span class="badge">Иллюстративное изображение</span><?php endif; ?>
+    <?php /* Public cards do not label examples as company portfolio. */ ?>
     <<?= $headingTag ?>><?= e($item['title']) ?></<?= $headingTag ?>>
     <?php if (!empty($item['city']) || !empty($item['district'])): ?>
         <p><?= e(trim(($item['city'] ?? '') . ' ' . ($item['district'] ?? ''))) ?></p>

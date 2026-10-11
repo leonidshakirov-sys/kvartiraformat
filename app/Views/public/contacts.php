@@ -7,7 +7,7 @@ $photo = SiteImages::contacts();
     <div class="container page-hero-content">
         <nav class="breadcrumbs"><a href="/">Главная</a><span>Контакты</span></nav>
         <h1><?= e($h1) ?></h1>
-        <p>КВАРТИРАФОРМАТ — ремонт квартир под ключ в Москве и Московской области.</p>
+        <p>КВАРТИРАФОРМАТ — ремонт квартир, домов и коммерческих помещений в Москве и Московской области.</p>
     </div>
 </section>
 <section class="section">
@@ -17,12 +17,12 @@ $photo = SiteImages::contacts();
             <p><strong>КВАРТИРАФОРМАТ</strong><br><?= e($settings['brand_tagline'] ?? '') ?></p>
             <p><?= e($settings['legal_name'] ?? '') ?><br>ИНН <?= e($settings['inn'] ?? '') ?></p>
             <p><a class="big-phone" href="<?= e($settings['phone_href'] ?? '') ?>"><?= e($settings['phone'] ?? '') ?></a></p>
-            <p>Адрес офиса: <?= e($settings['office_address'] ?? '') ?></p>
+            <p>Адрес: <?= e($settings['office_address'] ?? '') ?></p>
+            <p>Приём звонков: <?= e(working_hours($settings)) ?><br><small><?= e(working_hours_note($settings)) ?></small></p>
             <div class="hero-actions">
                 <a class="btn btn-primary" href="<?= e($settings['phone_href'] ?? '') ?>">Позвонить</a>
                 <a class="btn btn-outline" href="<?= e($settings['route_url'] ?? '#') ?>" target="_blank" rel="nofollow noopener">Построить маршрут</a>
             </div>
-            <p class="muted">Режим работы офиса уточняйте по телефону.</p>
         </div>
         <div>
             <?php if (!empty($settings['map_embed_url'])): ?>

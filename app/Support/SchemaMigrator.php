@@ -18,7 +18,10 @@ final class SchemaMigrator
         }
         $done = true;
         self::ensureYmCounter($pdo);
+        self::ensureWorkingHours($pdo);
         self::ensureStartingPrices($pdo);
+        self::syncApprovedTariffs($pdo);
+        self::cleanupPublicFaqs($pdo);
 
         if (self::hasSetting($pdo, self::VERSION_KEY)) {
             if (!self::hasCommercialServices($pdo)) {
@@ -51,14 +54,30 @@ final class SchemaMigrator
         if (!self::columnExists($pdo, 'services', 'category')) {
             return;
         }
+        self::renameHouseSlugs($pdo);
         if (!self::hasSetting($pdo, 'schema_houses_v1') || !self::hasHouseServices($pdo)) {
             self::seedHouses($pdo);
             self::touchSetting($pdo, 'schema_houses_v1', '1');
         }
-        self::ensureColumn($pdo, 'repair_tariffs', 'is_approved', 'TINYINT(1) NOT NULL DEFAULT 1');
+        self::refreshHouseCopy($pdo);
+        self::ensureCustomerFaqs($pdo);
+        self::ensureColumn($pdo, 'repair_tariffs', 'is_approved', 'TINYINT(1) NOT NULL DEFAULT 0');
         self::ensureColumn($pdo, 'repair_tariffs', 'includes_materials', 'TINYINT(1) NOT NULL DEFAULT 0');
         self::ensureColumn($pdo, 'repair_tariffs', 'works_list', 'TEXT NULL');
         self::ensureColumn($pdo, 'repair_tariffs', 'approved_at', 'DATETIME NULL');
+        self::ensureColumn($pdo, 'repair_tariffs', 'service_slug', 'VARCHAR(160) NULL');
+    }
+
+    private static function renameHouseSlugs(PDO $pdo): void
+    {
+        try {
+            $stmt = $pdo->prepare("UPDATE services SET slug = ? WHERE slug = ? AND category = 'house'");
+            foreach (HouseCatalog::legacyMap() as $old => $new) {
+                $stmt->execute([$new, $old]);
+            }
+        } catch (\Throwable) {
+            return;
+        }
     }
 
     private static function hasHouseServices(PDO $pdo): bool
@@ -259,32 +278,126 @@ final class SchemaMigrator
 
     private static function ensureStartingPrices(PDO $pdo): void
     {
-        try {
-            $update = $pdo->prepare('UPDATE services SET price = ?, updated_at = NOW() WHERE slug = ? AND (price IS NULL OR price = 0)');
-            foreach (StartingPrices::all() as $slug => $price) {
-                $update->execute([$price, $slug]);
-            }
-        } catch (\Throwable) {
-            return;
-        }
+        self::syncApprovedTariffs($pdo);
+    }
 
+    private static function syncApprovedTariffs(PDO $pdo): void
+    {
+        if (!self::tableExists($pdo, 'repair_tariffs')) {
+            return;
+        }
+        self::ensureColumn($pdo, 'repair_tariffs', 'is_approved', 'TINYINT(1) NOT NULL DEFAULT 0');
+        self::ensureColumn($pdo, 'repair_tariffs', 'includes_materials', 'TINYINT(1) NOT NULL DEFAULT 0');
+        self::ensureColumn($pdo, 'repair_tariffs', 'service_slug', 'VARCHAR(160) NULL');
+        $hasCategory = self::columnExists($pdo, 'repair_tariffs', 'category');
+        $reset = !self::hasSetting($pdo, 'schema_prices_v2');
+        foreach (StartingPrices::catalog() as $tariff) {
+            $price = $tariff['price_per_m2'];
+            try {
+                if ($hasCategory && self::columnExists($pdo, 'repair_tariffs', 'service_slug')) {
+                    $found = $pdo->prepare('SELECT id, is_approved FROM repair_tariffs WHERE service_slug = ? OR (category = ? AND repair_type = ? AND package_type = ?) LIMIT 1');
+                    $found->execute([$tariff['slug'], $tariff['category'], $tariff['repair_type'], $tariff['package_type']]);
+                    $row = $found->fetch() ?: null;
+                    if ($row) {
+                        $approved = $reset ? 0 : (int)$row['is_approved'];
+                        $stmt = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, category=?, sort_order=?, service_slug=?, includes_materials=?, is_approved=?, updated_at=NOW() WHERE id=?');
+                        $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $price, $tariff['note'], $tariff['category'], $tariff['sort_order'], $tariff['slug'], $tariff['includes_materials'], $approved, (int)$row['id']]);
+                    } else {
+                        $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, service_slug, includes_materials, is_approved, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, 0, NOW(), NOW())');
+                        $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $price, $tariff['note'], $tariff['sort_order'], $tariff['category'], $tariff['slug'], $tariff['includes_materials']]);
+                    }
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+        if ($reset) {
+            self::touchSetting($pdo, 'schema_prices_v2', '1');
+        }
+    }
+
+    private static function refreshHouseCopy(PDO $pdo): void
+    {
+        if (self::hasSetting($pdo, 'schema_house_copy_v2') || !self::tableExists($pdo, 'services')) {
+            return;
+        }
         try {
-            $count = (int)$pdo->query('SELECT COUNT(*) FROM repair_tariffs')->fetchColumn();
+            $stmt = $pdo->prepare('UPDATE services SET title=?, short=?, body=?, image_path=?, image_alt=?, meta_title=?, meta_description=?, h1=?, sort_order=?, updated_at=NOW() WHERE slug=? AND category=\'house\'');
+            foreach (HouseCatalog::services() as $service) {
+                $stmt->execute([
+                    $service['title'],
+                    $service['short'],
+                    $service['body'],
+                    $service['image_path'],
+                    $service['image_alt'],
+                    $service['meta_title'],
+                    $service['meta_description'],
+                    $service['h1'],
+                    (int)$service['sort_order'],
+                    $service['slug'],
+                ]);
+            }
+            $hub = HouseCatalog::hub();
+            foreach ([
+                'house_meta_title' => $hub['meta_title'],
+                'house_meta_description' => $hub['meta_description'],
+                'house_h1' => $hub['h1'],
+                'house_intro' => $hub['intro'],
+            ] as $key => $value) {
+                self::touchSetting($pdo, $key, $value);
+            }
+            self::touchSetting($pdo, 'schema_house_copy_v2', '1');
         } catch (\Throwable) {
             return;
         }
-        if ($count > 0) {
+    }
+
+    private static function ensureCustomerFaqs(PDO $pdo): void
+    {
+        if (!self::tableExists($pdo, 'faqs') || self::hasSetting($pdo, 'schema_customer_faq_v2')) {
             return;
         }
-        $hasCategory = self::columnExists($pdo, 'repair_tariffs', 'category');
-        foreach (StartingPrices::tariffs() as $tariff) {
-            if ($hasCategory) {
-                $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?, NOW(), NOW())');
-                $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $tariff['price_per_m2'], $tariff['note'], $tariff['sort_order'], $tariff['category']]);
-            } elseif ($tariff['category'] === 'apartment') {
-                $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, NOW(), NOW())');
-                $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $tariff['price_per_m2'], $tariff['note'], $tariff['sort_order']]);
+        $seed = require dirname(__DIR__) . '/seed.php';
+        try {
+            $hasCategory = self::columnExists($pdo, 'faqs', 'category');
+            $exists = $pdo->prepare('SELECT COUNT(*) FROM faqs WHERE question = ?');
+            foreach (($seed['faqs'] ?? []) as $i => $faq) {
+                $exists->execute([$faq['q']]);
+                if ((int)$exists->fetchColumn() > 0) {
+                    continue;
+                }
+                if ($hasCategory) {
+                    $stmt = $pdo->prepare('INSERT INTO faqs (question, answer, is_published, sort_order, category, created_at, updated_at) VALUES (?, ?, 1, ?, \'apartment\', NOW(), NOW())');
+                } else {
+                    $stmt = $pdo->prepare('INSERT INTO faqs (question, answer, is_published, sort_order, created_at, updated_at) VALUES (?, ?, 1, ?, NOW(), NOW())');
+                }
+                $stmt->execute([$faq['q'], $faq['a'], ($i + 1) * 10]);
             }
+            self::touchSetting($pdo, 'schema_customer_faq_v2', '1');
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    private static function ensureWorkingHours(PDO $pdo): void
+    {
+        if (!self::hasSetting($pdo, 'working_hours')) {
+            self::touchSetting($pdo, 'working_hours', 'ежедневно с 09:00 до 20:00');
+        }
+        if (!self::hasSetting($pdo, 'working_hours_note')) {
+            self::touchSetting($pdo, 'working_hours_note', 'Часы приёма телефонных обращений, время московское.');
+        }
+    }
+
+    private static function cleanupPublicFaqs(PDO $pdo): void
+    {
+        if (!self::tableExists($pdo, 'faqs')) {
+            return;
+        }
+        try {
+            $pdo->exec("DELETE FROM faqs WHERE question LIKE '%админ%' OR question LIKE '%SEO%' OR question LIKE '%Telegram%' OR question LIKE '%базе данных%' OR question LIKE '%изменить телефон%' OR question LIKE '%страницу под конкретный город%' OR question LIKE '%программ%'");
+        } catch (\Throwable) {
+            return;
         }
     }
 

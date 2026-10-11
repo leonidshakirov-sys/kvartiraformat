@@ -209,7 +209,7 @@ final class AdminController
 
     private function saveSettings(Request $request): void
     {
-        $allowed = ['brand_name','brand_name_full','brand_tagline','service_area','legal_name','inn','phone','phone_href','office_address','domain','ym_counter_id','map_embed_url','route_url','privacy_version','commercial_meta_title','commercial_meta_description','commercial_h1','commercial_intro','commercial_hub_published','house_meta_title','house_meta_description','house_h1','house_intro','house_hub_published','apartment_hub_published','notify_email','notify_email_from'];
+        $allowed = ['brand_name','brand_name_full','brand_tagline','service_area','legal_name','inn','phone','phone_href','office_address','domain','ym_counter_id','map_embed_url','route_url','privacy_version','working_hours','working_hours_note','commercial_meta_title','commercial_meta_description','commercial_h1','commercial_intro','commercial_hub_published','house_meta_title','house_meta_description','house_h1','house_intro','house_hub_published','apartment_hub_published','notify_email','notify_email_from'];
         $values = [];
         $post = $request->post();
         foreach ($allowed as $key) {
@@ -230,13 +230,18 @@ final class AdminController
             throw new \RuntimeException('База данных не настроена.');
         }
         $category = in_array((string)$request->input('category'), ['commercial', 'apartment', 'house'], true) ? (string)$request->input('category') : 'apartment';
+        $approved = (int)$request->input('is_approved', 0) === 1 ? 1 : 0;
+        $slug = trim((string)$request->input('service_slug', ''));
+        $priceRaw = trim((string)$request->input('price_per_m2', ''));
+        $price = $priceRaw === '' ? null : (int)$priceRaw;
+        $note = trim((string)$request->input('note', '')) ?: 'Стоимость работ без материалов. Предварительный ориентир, требуется утверждение.';
         if ((int)$request->input('id') > 0) {
-            $stmt = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, is_active=?, sort_order=?, category=?, updated_at=NOW() WHERE id=?');
-            $stmt->execute([$request->input('repair_type'), $request->input('package_type'), (int)$request->input('price_per_m2'), $request->input('note'), (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, (int)$request->input('id')]);
+            $stmt = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, is_active=?, sort_order=?, category=?, service_slug=?, is_approved=?, approved_at=IF(?=1, COALESCE(approved_at, NOW()), NULL), updated_at=NOW() WHERE id=?');
+            $stmt->execute([$request->input('repair_type'), $request->input('package_type'), $price, $note, (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, $slug !== '' ? $slug : null, $approved, $approved, (int)$request->input('id')]);
             return;
         }
-        $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
-        $stmt->execute([$request->input('repair_type'), $request->input('package_type'), (int)$request->input('price_per_m2'), $request->input('note'), (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category]);
+        $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, service_slug, is_approved, approved_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, IF(?=1, NOW(), NULL), NOW(), NOW())');
+        $stmt->execute([$request->input('repair_type'), $request->input('package_type'), $price, $note, (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, $slug !== '' ? $slug : null, $approved, $approved]);
     }
 
     private function saveFaq(Request $request): void
