@@ -11,3 +11,13 @@ Commercial library (/public/assets/images/commercial/):
 - free-purpose.webp — Unsplash photo-1497366412874-3415097a27e7, flexible commercial space
 - process.webp — Unsplash photo-1541888946425-d81bb19240f5, construction / site works
 Do not present these images as completed KvartiraFormat objects.
+
+House library (/public/assets/images/houses/):
+- hero.webp / turnkey.webp — Unsplash photo-1600607687939-ce8a6c25118c, finished house living room
+- capital.webp / after-build.webp — unfinished interior painting process (same source as apartment capital card)
+- cosmetic.webp — paint roller on a wall
+- cottage.webp — interior with staircase (same source as site hero living-room)
+- country.webp — house living room with beams
+- townhouse.webp — finished living room interior
+- bathroom.webp — simple house bathroom
+Illustrative only. Not KvartiraFormat staff or completed objects. Worker clothing on process shots still needs owner photos.

@@ -26,7 +26,7 @@
         <label>Title<input name="meta_title"></label>
         <label>Description<input name="meta_description"></label>
         <label>H1<input name="h1"></label>
-        <label>Направление<select name="category"><option value="apartment">Ремонт квартир</option><option value="commercial">Коммерческий ремонт</option></select></label>
+        <label>Направление<select name="category"><option value="apartment">Ремонт квартир</option><option value="house">Ремонт домов</option><option value="commercial">Коммерческий ремонт</option></select></label>
         <label>Сортировка<input name="sort_order" type="number" value="100"></label>
         <label><input type="checkbox" name="is_published" value="1" checked> Опубликовать</label>
         <label class="full">Описание HTML<textarea name="body" rows="8"></textarea></label>

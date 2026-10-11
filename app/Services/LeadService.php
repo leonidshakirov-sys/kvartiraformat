@@ -9,6 +9,7 @@ use App\Core\Database;
 use App\Core\Request;
 use App\Repositories\SiteRepository;
 use App\Support\CommercialCatalog;
+use App\Support\HouseCatalog;
 use PDO;
 
 final class LeadService
@@ -23,9 +24,10 @@ final class LeadService
     ) {
     }
 
-    public function submit(array $data, Request $request, array $file = []): array
+    public function submit(array $data, Request $request, array $files = []): array
     {
-        $errors = $this->validate($data, $file);
+        $files = $this->normalizeIncoming($files);
+        $errors = $this->validate($data, $files);
         if ($errors) {
             return ['ok' => false, 'errors' => $errors];
         }
@@ -41,6 +43,13 @@ final class LeadService
         }
 
         $leadType = $this->leadType($data);
+        if (trim((string)($data['premise_condition'] ?? '')) === '' && trim((string)($data['house_condition'] ?? '')) !== '') {
+            $data['premise_condition'] = trim((string)$data['house_condition']);
+        }
+        $special = trim((string)($data['special_requirements'] ?? ''));
+        if ($special !== '') {
+            $data['comment'] = trim((string)($data['comment'] ?? '') . "\nОсобые требования: " . $special);
+        }
         $estimate = $this->estimate($data);
         $hasLeadType = $this->hasLeadExtraColumns($pdo);
         if ($hasLeadType) {
@@ -60,7 +69,7 @@ final class LeadService
             trim((string)($data['repair_type'] ?? ($data['premise_condition'] ?? ''))),
             trim((string)($data['property_type'] ?? '')),
             $this->nullableFloat($data['area'] ?? null),
-            trim((string)($data['rooms'] ?? '')),
+            trim((string)($data['rooms'] ?? ($data['floors'] ?? ''))),
             trim((string)($data['package_type'] ?? '')),
             $this->cleanExtras($data['extras'] ?? []),
             trim((string)($data['comment'] ?? '')),
@@ -88,16 +97,22 @@ final class LeadService
         $stmt->execute($params);
         $leadId = (int)$pdo->lastInsertId();
 
-        $attachmentNote = '';
-        if ($this->uploads && !empty($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-            $stored = $this->uploads->handlePrivateDocument($file);
-            if (!empty($stored['stored_name'])) {
-                $this->repo->attachLeadFile($leadId, $stored);
-                $attachmentNote = (string)$stored['original_name'];
+        $fileCount = 0;
+        if ($this->uploads && $files) {
+            foreach ($files as $file) {
+                $stored = $this->uploads->handlePrivateDocument($file);
+                if (!empty($stored['stored_name'])) {
+                    try {
+                        $this->repo->attachLeadFile($leadId, $stored);
+                        $fileCount++;
+                    } catch (\Throwable) {
+                        $this->uploads->deleteStored([(string)$stored['stored_name']]);
+                    }
+                }
             }
         }
 
-        $message = $this->telegramMessage($leadId, $publicId, $data, $estimate, $leadType, $attachmentNote);
+        $message = $this->telegramMessage($leadId, $publicId, $data, $estimate, $leadType, $fileCount);
         $this->telegram->queue($leadId, $message);
         $delivery = $this->telegram->sendPending(1);
         if (($delivery['sent'] ?? 0) < 1 && $this->mail) {
@@ -113,26 +128,35 @@ final class LeadService
     public function estimate(array $data): string
     {
         $leadType = $this->leadType($data);
-        if ($leadType === 'commercial') {
-            return $this->commercialEstimate($data);
+        if ($leadType === 'house') {
+            return $this->pricedEstimate($data, 'house') ?? HouseCatalog::INDIVIDUAL_ESTIMATE;
         }
+        if ($leadType === 'commercial') {
+            return $this->pricedEstimate($data, 'commercial') ?? CommercialCatalog::INDIVIDUAL_ESTIMATE;
+        }
+        return $this->pricedEstimate($data, 'apartment') ?? 'Индивидуальный расчёт';
+    }
+
+    private function pricedEstimate(array $data, string $category): ?string
+    {
         $area = $this->nullableFloat($data['area'] ?? null);
         if (!$area || $area <= 0) {
-            return 'Получите индивидуальный расчёт стоимости ремонта';
+            return null;
         }
-        $tariffs = $this->repo->tariffs('apartment');
-        if (!$tariffs) {
-            return 'Получите индивидуальный расчёт стоимости ремонта';
-        }
-        $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? '')));
-        $package = mb_strtolower(trim((string)($data['package_type'] ?? '')));
-        foreach ($tariffs as $tariff) {
-            if (mb_strtolower((string)$tariff['repair_type']) === $repairType && mb_strtolower((string)$tariff['package_type']) === $package && (int)$tariff['price_per_m2'] > 0) {
+        $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? $data['premise_condition'] ?? '')));
+        $package = mb_strtolower(trim((string)($data['package_type'] ?? 'Только работы')));
+        foreach ($this->repo->tariffs($category) as $tariff) {
+            if ((int)($tariff['is_approved'] ?? 0) !== 1 || (int)($tariff['price_per_m2'] ?? 0) <= 0) {
+                continue;
+            }
+            $sameRepair = $repairType === '' || mb_strtolower((string)$tariff['repair_type']) === $repairType;
+            $samePackage = $package === '' || mb_strtolower((string)$tariff['package_type']) === $package;
+            if ($sameRepair && $samePackage) {
                 $total = (int)round($area * (int)$tariff['price_per_m2']);
                 return 'Предварительно от ' . number_format($total, 0, ',', ' ') . ' ₽';
             }
         }
-        return 'Получите индивидуальный расчёт стоимости ремонта';
+        return null;
     }
 
     private function commercialEstimate(array $data): string
@@ -155,10 +179,10 @@ final class LeadService
         return CommercialCatalog::INDIVIDUAL_ESTIMATE;
     }
 
-    private function validate(array $data, array $file = []): array
+    private function validate(array $data, array $files = []): array
     {
         $errors = [];
-        $isCommercial = $this->leadType($data) === 'commercial';
+        $leadType = $this->leadType($data);
         if (!empty($data['website'])) {
             $errors[] = 'Форма отклонена антиспам-защитой.';
         }
@@ -172,14 +196,14 @@ final class LeadService
         if (empty($data['privacy_consent'])) {
             $errors[] = 'Необходимо согласие на обработку персональных данных.';
         }
-        $maxArea = $isCommercial ? 20000 : 1000;
+        $maxArea = $leadType === 'apartment' ? 1000 : 20000;
         if (isset($data['area']) && $data['area'] !== '' && (!$this->nullableFloat($data['area']) || (float)$data['area'] <= 0 || (float)$data['area'] > $maxArea)) {
-            $errors[] = $isCommercial ? 'Проверьте площадь помещения.' : 'Проверьте площадь квартиры.';
+            $errors[] = $leadType === 'apartment' ? 'Проверьте площадь квартиры.' : 'Проверьте площадь объекта.';
         }
-        if ($this->uploads && !empty($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-            $check = $this->uploads->validatePrivateDocument($file);
+        if ($this->uploads && $files) {
+            $check = $this->uploads->validatePrivateDocuments($files);
             if (empty($check['ok'])) {
-                $errors[] = $check['error'] ?? 'Не удалось прикрепить файл.';
+                $errors[] = $check['error'] ?? 'Не удалось прикрепить файлы.';
             }
         }
         return $errors;
@@ -198,44 +222,29 @@ final class LeadService
         return $id ? (int)$id : null;
     }
 
-    private function telegramMessage(int $leadId, string $publicId, array $data, string $estimate, string $leadType, string $attachmentNote): string
+    private function telegramMessage(int $leadId, string $publicId, array $data, string $estimate, string $leadType, int $fileCount): string
     {
-        $line = static fn(string $label, mixed $value): string => '<b>' . htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ':</b> ' . htmlspecialchars(trim((string)$value) !== '' ? trim((string)$value) : 'не указано', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        if ($leadType === 'commercial') {
-            $repair = trim((string)($data['repair_type'] ?? $data['premise_condition'] ?? ''));
-            $message = "🔔 <b>КВАРТИРАФОРМАТ — КОММЕРЧЕСКИЙ РЕМОНТ</b>\n\n"
-                . $line('Тип объекта', $data['property_type'] ?? '') . "\n"
-                . $line('Площадь', ($data['area'] ?? '') !== '' ? ($data['area'] . ' м²') : '') . "\n"
-                . $line('Вид ремонта', $repair) . "\n"
-                . $line('Местоположение', $data['city'] ?? '') . "\n"
-                . $line('Начало работ', $data['work_start'] ?? '') . "\n"
-                . $line('Проект', $data['has_project'] ?? '') . "\n"
-                . $line('Имя', $data['name'] ?? '') . "\n"
-                . $line('Телефон', $data['phone'] ?? '') . "\n"
-                . $line('Комментарий', $data['comment'] ?? '') . "\n"
-                . $line('Источник', $data['source'] ?? 'site') . "\n"
-                . $line('Страница', $data['page_url'] ?? '/') . "\n"
-                . $line('Дата и время', date('d.m.Y H:i'));
-            if ($attachmentNote !== '') {
-                $message .= "\n" . $line('Файл', $attachmentNote . ' — доступен в админ-панели, без публичной ссылки');
-            }
-            $message .= "\n" . $line('Ориентир', $estimate) . "\n" . $line('ID', $publicId);
-            return $message;
-        }
-
-        return "🔔 <b>КВАРТИРАФОРМАТ — НОВАЯ ЗАЯВКА</b>\n\n"
+        $direction = match ($leadType) {
+            'house' => 'ремонт дома',
+            'commercial' => 'коммерческий ремонт',
+            default => 'ремонт квартиры',
+        };
+        $adminUrl = 'https://kvartiraformat.ru/admin/';
+        $header = 'КвартираФормат — новая заявка №' . $leadId . ".\n"
+            . 'Направление: ' . $direction . ".\n"
+            . 'Прикреплено файлов: ' . $fileCount . ".\n"
+            . 'Просмотреть заявку: ' . $adminUrl;
+        $line = static fn(string $label, mixed $value): string => htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . ': ' . htmlspecialchars(trim((string)$value) !== '' ? trim((string)$value) : 'не указано', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return $header . "\n\n"
             . $line('ID', $publicId) . "\n"
             . $line('Имя', $data['name'] ?? '') . "\n"
             . $line('Телефон', $data['phone'] ?? '') . "\n"
-            . $line('Город', $data['city'] ?? '') . "\n"
-            . $line('Тип ремонта', $data['repair_type'] ?? '') . "\n"
-            . $line('Площадь', ($data['area'] ?? '') ? ($data['area'] . ' м²') : '') . "\n"
-            . $line('Тип жилья', $data['property_type'] ?? '') . "\n"
-            . $line('Предварительная стоимость', $estimate) . "\n"
-            . $line('Источник', $data['source'] ?? 'site') . "\n"
-            . $line('Страница заявки', $data['page_url'] ?? '/') . "\n"
-            . $line('Дата', date('d.m.Y H:i')) . "\n"
-            . $line('Внутренний номер', (string)$leadId);
+            . $line('Город или адрес', $data['city'] ?? '') . "\n"
+            . $line('Объект', $data['property_type'] ?? '') . "\n"
+            . $line('Вид работ', $data['repair_type'] ?? ($data['premise_condition'] ?? '')) . "\n"
+            . $line('Площадь', ($data['area'] ?? '') !== '' ? ($data['area'] . ' м²') : '') . "\n"
+            . $line('Ориентир', $estimate) . "\n"
+            . $line('Страница', $data['page_url'] ?? '/');
     }
 
     private function cleanExtras(mixed $extras): string
@@ -248,7 +257,29 @@ final class LeadService
 
     private function leadType(array $data): string
     {
-        return (($data['lead_type'] ?? '') === 'commercial') ? 'commercial' : 'apartment';
+        $type = (string)($data['lead_type'] ?? 'apartment');
+        return in_array($type, ['apartment', 'house', 'commercial'], true) ? $type : 'apartment';
+    }
+
+    /**
+     * @param array<string,mixed>|list<array<string,mixed>> $files
+     * @return list<array<string,mixed>>
+     */
+    private function normalizeIncoming(array $files): array
+    {
+        if ($this->uploads) {
+            $fromRequest = $this->uploads->incomingLeadFiles();
+            if ($fromRequest) {
+                return $fromRequest;
+            }
+        }
+        if ($files === []) {
+            return [];
+        }
+        if (isset($files['tmp_name']) && !is_array($files['tmp_name'])) {
+            return (($files['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) ? [] : [$files];
+        }
+        return [];
     }
 
     private function hasLeadExtraColumns(PDO $pdo): bool

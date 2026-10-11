@@ -25,12 +25,53 @@ function route_url(string $path = ''): string
     return '/' . ltrim($path, '/');
 }
 
-function format_price(?int $price): string
+function format_price(?int $price, bool $approved = true): string
 {
-    if (!$price || $price <= 0) {
-        return 'По расчёту';
+    if (!$approved || !$price || $price <= 0) {
+        return 'Индивидуальный расчёт';
     }
     return 'от ' . number_format($price, 0, ',', ' ') . ' ₽/м²';
+}
+
+/**
+ * @param array<string,mixed> $item
+ * @return array{label:string,note:string,approved:bool,amount:?int}
+ */
+function service_price(array $item): array
+{
+    $amount = isset($item['price']) && $item['price'] !== '' && $item['price'] !== null ? (int)$item['price'] : null;
+    $approved = !empty($item['price_approved']);
+    $label = format_price($amount, $approved);
+    return [
+        'label' => $label,
+        'note' => ($approved && $amount && $amount > 0) ? 'Стоимость работ без материалов' : '',
+        'approved' => $approved && $amount && $amount > 0,
+        'amount' => $amount,
+    ];
+}
+
+function working_hours(array $settings): string
+{
+    $value = trim((string)($settings['working_hours'] ?? ''));
+    return $value !== '' ? $value : 'ежедневно с 09:00 до 20:00';
+}
+
+function working_hours_note(array $settings): string
+{
+    $value = trim((string)($settings['working_hours_note'] ?? ''));
+    return $value !== '' ? $value : 'Часы приёма телефонных обращений, время московское.';
+}
+
+/**
+ * @param array<string,mixed> $tariff
+ * @return array{label:string,note:string,approved:bool,amount:?int}
+ */
+function tariff_price(array $tariff): array
+{
+    return service_price([
+        'price' => $tariff['price_per_m2'] ?? null,
+        'price_approved' => (int)($tariff['is_approved'] ?? 0) === 1,
+    ]);
 }
 
 function excerpt(string $text, int $limit = 170): string

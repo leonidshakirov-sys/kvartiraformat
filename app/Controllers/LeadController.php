@@ -20,7 +20,7 @@ final class LeadController
         if (!Csrf::verify((string)$request->input('_csrf', ''))) {
             Response::json(['ok' => false, 'errors' => ['Сессия формы истекла. Обновите страницу и попробуйте снова.']], 419);
         }
-        $result = $this->leadService->submit($request->post(), $request, $_FILES['brief_file'] ?? []);
+        $result = $this->leadService->submit($request->post(), $request, $_FILES['attachments'] ?? $_FILES['brief_file'] ?? []);
         if (!$result['ok']) {
             Response::json($result, 422);
         }

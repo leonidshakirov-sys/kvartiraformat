@@ -7,16 +7,17 @@ $heroImage = SiteImages::serviceHero($service);
     <div class="container page-hero-content">
         <nav class="breadcrumbs">
             <a href="/">Главная</a>
-            <a href="/#services">Услуги</a>
+            <a href="/remont-kvartir/">Ремонт квартир</a>
             <span><?= e($service['title']) ?></span>
         </nav>
         <h1><?= e($h1) ?></h1>
         <p><?= e($service['short'] ?? '') ?></p>
-        <p><strong><?= e(format_price(isset($service['price']) ? (int)$service['price'] : null)) ?></strong></p>
+        <?php $price = service_price($service); ?>
+        <p><strong class="card-price"><?= e($price['label']) ?></strong><?php if ($price['note'] !== ''): ?> <small class="price-note"><?= e($price['note']) ?></small><?php endif; ?></p>
         <a class="btn btn-primary" href="#calculator">Рассчитать стоимость</a>
     </div>
 </section>
-<?php require __DIR__ . '/../partials/calculator.php'; ?>
+<?php $calcLeadType = 'apartment'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section">
     <div class="container article">
         <div class="media-frame article-photo">

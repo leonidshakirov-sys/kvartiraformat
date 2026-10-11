@@ -12,7 +12,8 @@ $processImage = $processImage ?? $heroImage;
         </nav>
         <h1><?= e($h1) ?></h1>
         <p><?= e($service['intro'] ?? $service['short'] ?? '') ?></p>
-        <p><strong><?= e(format_price(isset($service['price']) ? (int)$service['price'] : null)) ?></strong></p>
+        <?php $price = service_price($service); ?>
+        <p><strong class="card-price"><?= e($price['label']) ?></strong><?php if ($price['note'] !== ''): ?> <small class="price-note"><?= e($price['note']) ?></small><?php endif; ?></p>
         <a class="btn btn-primary" href="#calculator">Получить смету на ремонт помещения</a>
     </div>
 </section>
@@ -33,7 +34,6 @@ $processImage = $processImage ?? $heroImage;
                 <?php foreach ($service['works'] as $work): ?><li><?= e($work) ?></li><?php endforeach; ?>
             </ul>
         <?php endif; ?>
-        <p class="muted">Фотография носит иллюстративный характер и не является объектом, выполненным компанией КвартираФормат.</p>
     </div>
 </section>
 <section class="section alt">
@@ -47,7 +47,7 @@ $processImage = $processImage ?? $heroImage;
         </ol>
     </div>
 </section>
-<?php require __DIR__ . '/../partials/calculator-commercial.php'; ?>
+<?php $calcLeadType = 'commercial'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section">
     <div class="container">
         <div class="section-head">
