@@ -27,7 +27,11 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-$root = dirname(__DIR__);
+$root = is_file(__DIR__ . '/app/bootstrap.php') ? __DIR__ : dirname(__DIR__);
+if (!is_file($root . '/app/bootstrap.php')) {
+    http_response_code(500);
+    exit('Site files are missing: app/bootstrap.php');
+}
 require $root . '/app/bootstrap.php';
 
 $config = new Config($root);
