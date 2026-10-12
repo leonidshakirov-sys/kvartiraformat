@@ -85,6 +85,29 @@ function tariff_price(array $tariff): array
     ]);
 }
 
+function portfolio_public_works(?string $works): string
+{
+    $text = trim((string)$works);
+    if ($text === '') {
+        return '';
+    }
+    $phrases = [
+        'Иллюстративное изображение.',
+        'Иллюстрационное фото.',
+        'Не является фотографией объекта, выполненного компанией КвартираФормат.',
+        'Не является фотографией объекта, выполненного компанией «КвартираФормат».',
+        'Демонстрационные материалы показывают формат карточки. Замените их реальными объектами перед публикацией.',
+        'Демонстрационные материалы.',
+        'Примеры интерьеров, не являющиеся работами компании.',
+        'Примеры интерьеров, не являющиеся работами компании',
+    ];
+    $clean = trim((string)preg_replace('/\s+/u', ' ', str_replace($phrases, '', $text)));
+    if ($clean === '' || preg_match('/^[\s\.\,\;\:\-]+$/u', $clean)) {
+        return '';
+    }
+    return $clean;
+}
+
 function excerpt(string $text, int $limit = 170): string
 {
     $plain = trim(strip_tags($text));

@@ -97,7 +97,7 @@
                 </div>
             </div>
             <a href="/#prices">Цены</a>
-            <a href="/portfolio/">Примеры интерьеров</a>
+            <a href="/portfolio/">Наши работы</a>
             <a href="/contacts/">Контакты</a>
         </nav>
         <div class="header-contacts">
@@ -111,7 +111,7 @@
 <footer class="site-footer">
     <div class="container footer-grid">
         <div><a class="logo logo-footer" href="/"><span>КВАРТИРА</span><b>ФОРМАТ</b><small>Квартиры, дома, коммерция</small></a><p>Москва и Московская область. Ремонт квартир, частных домов и коммерческих помещений.</p></div>
-        <div><h3>Направления</h3><a href="/remont-kvartir/">Ремонт квартир</a><a href="/remont-domov/">Ремонт домов</a><a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a><a href="/#prices">Цены</a><a href="/portfolio/">Примеры интерьеров</a><a href="/contacts/">Контакты</a></div>
+        <div><h3>Направления</h3><a href="/remont-kvartir/">Ремонт квартир</a><a href="/remont-domov/">Ремонт домов</a><a href="/remont-kommercheskih-pomescheniy/">Коммерческий ремонт</a><a href="/#prices">Цены</a><a href="/portfolio/">Наши работы</a><a href="/contacts/">Контакты</a></div>
         <div><h3>Популярные услуги</h3><a href="/uslugi/remont-kvartir-pod-klyuch/">Квартиры под ключ</a><a href="/remont-domov/pod-klyuch/">Дома под ключ</a><a href="/remont-ofisov/">Офисы</a><a href="/remont-magazinov/">Магазины</a><a href="/remont-domov/taunkhausov/">Таунхаусы</a></div>
         <div><h3>Реквизиты</h3><p><?= e($s['legal_name'] ?? '') ?><br>ИНН <?= e($s['inn'] ?? '') ?><br><a href="<?= e($s['phone_href'] ?? '') ?>"><?= e($s['phone'] ?? '') ?></a><br><?= e($s['office_address'] ?? '') ?><br>Приём звонков: <?= e(working_hours($s)) ?><br><small><?= e(working_hours_note($s)) ?></small></p></div>
         <div><h3>Документы</h3><a href="/privacy-policy/">Политика обработки персональных данных</a><a href="/personal-data-consent/">Согласие на обработку персональных данных</a><a href="/cookies/">Cookies</a></div>

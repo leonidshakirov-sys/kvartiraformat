@@ -88,11 +88,11 @@ return [
         ['q' => 'Как заказать расчёт?', 'a' => 'Оставьте заявку в калькуляторе или форме на сайте, укажите телефон и при необходимости прикрепите файлы. Мы свяжемся, чтобы уточнить задачу и согласовать замер.'],
     ],
     'portfolio' => [
-        ['title' => 'Гостиная после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Гостиная', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 1, 'image_key' => 'living'],
-        ['title' => 'Кухня после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Кухня', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 1, 'image_key' => 'kitchen'],
-        ['title' => 'Ванная после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Ванная и санузел', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 1, 'image_key' => 'bathroom'],
-        ['title' => 'Спальня после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Спальня', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 1, 'image_key' => 'bedroom'],
-        ['title' => 'Прихожая после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Прихожая', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 1, 'image_key' => 'hallway'],
-        ['title' => 'Семейная квартира после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Семейный интерьер', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 1, 'image_key' => 'family'],
+        ['title' => 'Гостиная после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Гостиная', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 0, 'image_key' => 'living'],
+        ['title' => 'Кухня после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Кухня', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 0, 'image_key' => 'kitchen'],
+        ['title' => 'Ванная после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Ванная и санузел', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 0, 'image_key' => 'bathroom'],
+        ['title' => 'Спальня после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Спальня', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 0, 'image_key' => 'bedroom'],
+        ['title' => 'Прихожая после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Прихожая', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 0, 'image_key' => 'hallway'],
+        ['title' => 'Семейная квартира после отделки', 'city' => '', 'district' => '', 'area' => '', 'repair_type' => 'Семейный интерьер', 'cost' => '', 'duration' => '', 'works' => '', 'is_demo' => 0, 'image_key' => 'family'],
     ],
 ];

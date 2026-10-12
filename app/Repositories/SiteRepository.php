@@ -282,22 +282,31 @@ final class SiteRepository
         }
     }
 
-    public function portfolio(?string $category = 'apartment'): array
+    public function portfolio(?string $category = 'apartment', bool $manage = false): array
     {
         $pdo = $this->pdo();
         if (!$pdo) {
             return in_array($category, ['commercial', 'house'], true) ? [] : SiteImages::normalizePortfolio($this->seed['portfolio']);
         }
         try {
-            if ($this->hasColumn('portfolio_items', 'category')) {
-                $stmt = $pdo->prepare('SELECT * FROM portfolio_items WHERE is_published = 1 AND category = ? ORDER BY sort_order, id DESC');
-                $stmt->execute([$category]);
-                $items = $stmt->fetchAll();
-            } else {
-                if (in_array($category, ['commercial', 'house'], true)) {
+            $where = $manage ? '1=1' : 'is_published = 1 AND COALESCE(is_demo, 0) = 0';
+            if ($category === null || !$this->hasColumn('portfolio_items', 'category')) {
+                if (!$manage && in_array($category, ['commercial', 'house'], true) && !$this->hasColumn('portfolio_items', 'category')) {
                     return [];
                 }
-                $items = $pdo->query('SELECT * FROM portfolio_items WHERE is_published = 1 ORDER BY sort_order, id DESC')->fetchAll();
+                $sql = 'SELECT * FROM portfolio_items WHERE ' . $where;
+                if ($category !== null && $this->hasColumn('portfolio_items', 'category')) {
+                    $sql .= ' AND category = ?';
+                    $stmt = $pdo->prepare($sql . ' ORDER BY sort_order, id DESC');
+                    $stmt->execute([$category]);
+                    $items = $stmt->fetchAll();
+                } else {
+                    $items = $pdo->query($sql . ' ORDER BY sort_order, id DESC')->fetchAll();
+                }
+            } else {
+                $stmt = $pdo->prepare('SELECT * FROM portfolio_items WHERE ' . $where . ' AND category = ? ORDER BY sort_order, id DESC');
+                $stmt->execute([$category]);
+                $items = $stmt->fetchAll();
             }
             foreach ($items as &$item) {
                 $stmt = $pdo->prepare('SELECT * FROM portfolio_images WHERE portfolio_id = ? ORDER BY sort_order, id');
@@ -305,7 +314,7 @@ final class SiteRepository
                 $item['images'] = $stmt->fetchAll();
             }
             unset($item);
-            if (in_array($category, ['commercial', 'house'], true)) {
+            if ($category === null || in_array($category, ['commercial', 'house'], true)) {
                 return $items ?: [];
             }
             return SiteImages::normalizePortfolio($items ?: $this->seed['portfolio']);

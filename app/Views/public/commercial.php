@@ -105,24 +105,16 @@ $processImage = $processImage ?? $heroImage;
 <section class="section section-muted">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Примеры</span>
-            <h2>Примеры интерьеров и вариантов отделки</h2>
-            <p>Примеры помещений разного назначения. Когда появятся съёмки выполненных объектов, опубликуем раздел «Наши работы».</p>
+            <span class="eyebrow">Наши работы</span>
+            <h2>Наши работы</h2>
+            <p>Посмотрите примеры ремонта квартир, домов и коммерческих помещений, выполненного нашей командой.</p>
         </div>
         <?php if (!empty($portfolio)): ?>
             <div class="portfolio-grid">
                 <?php foreach ($portfolio as $index => $item): $headingTag = 'h3'; require __DIR__ . '/../partials/portfolio-card.php'; endforeach; ?>
             </div>
-        <?php else: ?>
-            <div class="cards service-cards">
-                <?php foreach (array_slice($commercialServices, 0, 3) as $item): $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1068]; ?>
-                    <article class="card">
-                        <div class="media-frame card-image"><?= picture($cardImage) ?></div>
-                        <h3><?= e($item['title']) ?></h3>
-                    </article>
-                <?php endforeach; ?>
-            </div>
         <?php endif; ?>
+        <a class="btn btn-outline" href="/portfolio/">Смотреть все работы</a>
     </div>
 </section>
 <section class="section" id="geo">

@@ -187,7 +187,7 @@ final class SiteImages
                 'cost' => '',
                 'duration' => '',
                 'works' => '',
-                'is_demo' => 1,
+                'is_demo' => 0,
                 'image_key' => $image['key'],
                 'images' => [],
                 'sort_order' => ($i + 1) * 10,

@@ -24,6 +24,7 @@ final class SchemaMigrator
         self::cleanupPublicFaqs($pdo);
         self::ensureCosmeticPhoto($pdo);
         self::ensureCapitalPhoto($pdo);
+        self::ensurePortfolioWorks($pdo);
 
         if (self::hasSetting($pdo, self::VERSION_KEY)) {
             if (!self::hasCommercialServices($pdo)) {
@@ -319,6 +320,27 @@ final class SchemaMigrator
                 'kapitalnyy',
             ]);
             self::touchSetting($pdo, 'schema_capital_photo_v1', '1');
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    private static function ensurePortfolioWorks(PDO $pdo): void
+    {
+        if (self::hasSetting($pdo, 'schema_portfolio_works_v1') || !self::tableExists($pdo, 'portfolio_items')) {
+            return;
+        }
+        try {
+            $pdo->exec("UPDATE portfolio_items SET is_published = 0, updated_at = NOW() WHERE title LIKE '%Демонстрацион%'");
+            $rows = $pdo->query('SELECT id, works FROM portfolio_items')->fetchAll();
+            $update = $pdo->prepare('UPDATE portfolio_items SET works = ?, is_demo = 0, updated_at = NOW() WHERE id = ?');
+            foreach ($rows as $row) {
+                $clean = portfolio_public_works((string)($row['works'] ?? ''));
+                if ($clean !== trim((string)($row['works'] ?? ''))) {
+                    $update->execute([$clean, (int)$row['id']]);
+                }
+            }
+            self::touchSetting($pdo, 'schema_portfolio_works_v1', '1');
         } catch (\Throwable) {
             return;
         }

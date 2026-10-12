@@ -1,14 +1,22 @@
 <?php use App\Support\SiteImages; ?>
 <section class="admin-panel">
     <h1>Портфолио</h1>
-    <p>Иллюстративные карточки отмечены. Когда появятся реальные объекты, добавьте их здесь и снимите галочку «Демонстрационный объект».</p>
+    <p>Здесь опубликованные работы компании. Город, район, площадь, срок и стоимость заполняйте только если эти данные подтверждены. Новое фото добавляется вместе с объектом.</p>
     <div class="portfolio-grid">
         <?php foreach ($portfolio as $index => $item): $preview = SiteImages::portfolio($item, $index); ?>
             <article class="portfolio-card">
                 <img class="service-preview" src="<?= e($preview['src']) ?>" alt="<?= e($preview['alt']) ?>">
                 <h3><?= e($item['title']) ?></h3>
-                <p><?= e($item['city'] ?? '') ?> <?= e($item['district'] ?? '') ?></p>
-                <?php if (!empty($item['is_demo'])): ?><span class="badge">Иллюстрация</span><?php endif; ?>
+                <p><?= e(trim(($item['city'] ?? '') . ' ' . ($item['district'] ?? ''))) ?></p>
+                <?php if (!empty($item['id'])): ?>
+                    <form method="post">
+                        <?= App\Core\Csrf::field() ?>
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="table" value="portfolio_items">
+                        <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
+                        <button class="btn btn-small" type="submit">Удалить</button>
+                    </form>
+                <?php endif; ?>
             </article>
         <?php endforeach; ?>
     </div>
@@ -27,7 +35,7 @@
         <label>Сортировка<input name="sort_order" type="number" value="100"></label>
         <label>Фото объекта<input type="file" name="image" accept="image/*"></label>
         <label>ALT фото<input name="image_alt"></label>
-        <label><input type="checkbox" name="is_demo" value="1"> Демонстрационный объект</label>
+        <label><input type="checkbox" name="is_demo" value="1"> Не показывать на сайте как работу компании</label>
         <label><input type="checkbox" name="is_published" value="1" checked> Опубликовать</label>
         <label class="full">Перечень работ<textarea name="works" rows="5"></textarea></label>
         <button class="btn btn-primary">Сохранить</button>

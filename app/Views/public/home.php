@@ -157,14 +157,14 @@ $commercialTariffs = $commercialTariffs ?? [];
 <section class="section section-muted">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Примеры</span>
-            <h2>Примеры интерьеров и вариантов отделки</h2>
-            <p>Подборка помогает понять уровень отделки. Когда появятся съёмки выполненных объектов, опубликуем раздел «Наши работы».</p>
+            <span class="eyebrow">Наши работы</span>
+            <h2>Наши работы</h2>
+            <p>Посмотрите примеры ремонта квартир, домов и коммерческих помещений, выполненного нашей командой.</p>
         </div>
         <div class="portfolio-grid">
             <?php foreach ($portfolio as $index => $item): $headingTag = 'h3'; require __DIR__ . '/../partials/portfolio-card.php'; endforeach; ?>
         </div>
-        <a class="btn btn-outline" href="/portfolio/">Смотреть портфолио</a>
+        <a class="btn btn-outline" href="/portfolio/">Смотреть все работы</a>
     </div>
 </section>
 <section class="section section-surface">
