@@ -23,7 +23,8 @@ $heroImage = SiteImages::geo((string)($geo['slug'] ?? ''));
         <h2>Виды ремонта</h2>
         <div class="cards compact">
             <?php foreach ($services as $service): ?>
-                <a class="mini-card" href="/uslugi/<?= e($service['slug']) ?>/"><?= e($service['title']) ?></a>
+                <?php $geoPrice = service_price($service); ?>
+                <a class="mini-card" href="/uslugi/<?= e($service['slug']) ?>/"><?= e($service['title']) ?> — <?= e($geoPrice['label']) ?></a>
             <?php endforeach; ?>
         </div>
     </div>

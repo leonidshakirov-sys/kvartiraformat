@@ -139,24 +139,66 @@ final class LeadService
 
     private function pricedEstimate(array $data, string $category): ?string
     {
+        $tariffs = $this->repo->tariffs($category);
+        $slug = trim((string)($data['service_slug'] ?? ''));
+        if ($slug !== '') {
+            foreach ($tariffs as $tariff) {
+                $tariffSlug = (string)($tariff['service_slug'] ?? $tariff['slug'] ?? '');
+                if ($tariffSlug === $slug) {
+                    return $this->formatTariffEstimate($tariff, $data);
+                }
+            }
+        }
+
+        $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? '')));
+        $property = mb_strtolower(trim((string)($data['property_type'] ?? '')));
+        $package = mb_strtolower(trim((string)($data['package_type'] ?? '')));
+        if ($category === 'commercial') {
+            $wanted = $property;
+            if ($wanted === '' || $wanted === 'другое помещение') {
+                $wanted = 'коммерческий ремонт';
+            }
+            foreach ($tariffs as $tariff) {
+                if (mb_strtolower((string)($tariff['repair_type'] ?? '')) === $wanted) {
+                    return $this->formatTariffEstimate($tariff, $data);
+                }
+            }
+            return null;
+        }
+
+        foreach ($tariffs as $tariff) {
+            $sameRepair = $repairType !== '' && mb_strtolower((string)($tariff['repair_type'] ?? '')) === $repairType;
+            $samePackage = $package === '' || mb_strtolower((string)($tariff['package_type'] ?? '')) === $package;
+            if ($sameRepair && $samePackage) {
+                return $this->formatTariffEstimate($tariff, $data);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param array<string,mixed> $tariff
+     * @param array<string,mixed> $data
+     */
+    private function formatTariffEstimate(array $tariff, array $data): ?string
+    {
+        if ((int)($tariff['is_active'] ?? 1) !== 1 || (int)($tariff['is_approved'] ?? 0) !== 1) {
+            return null;
+        }
+        $price = (int)($tariff['price_per_m2'] ?? 0);
+        if ($price <= 0) {
+            return null;
+        }
+        $unit = (string)($tariff['price_unit'] ?? $tariff['unit'] ?? 'm2');
+        if ($unit === 'room') {
+            return 'Предварительно от ' . number_format($price, 0, ',', ' ') . ' ₽ за помещение';
+        }
         $area = $this->nullableFloat($data['area'] ?? null);
         if (!$area || $area <= 0) {
             return null;
         }
-        $repairType = mb_strtolower(trim((string)($data['repair_type'] ?? $data['premise_condition'] ?? '')));
-        $package = mb_strtolower(trim((string)($data['package_type'] ?? 'Только работы')));
-        foreach ($this->repo->tariffs($category) as $tariff) {
-            if ((int)($tariff['is_approved'] ?? 0) !== 1 || (int)($tariff['price_per_m2'] ?? 0) <= 0) {
-                continue;
-            }
-            $sameRepair = $repairType === '' || mb_strtolower((string)$tariff['repair_type']) === $repairType;
-            $samePackage = $package === '' || mb_strtolower((string)$tariff['package_type']) === $package;
-            if ($sameRepair && $samePackage) {
-                $total = (int)round($area * (int)$tariff['price_per_m2']);
-                return 'Предварительно от ' . number_format($total, 0, ',', ' ') . ' ₽';
-            }
-        }
-        return null;
+        $total = (int)round($area * $price);
+        return 'Предварительно от ' . number_format($total, 0, ',', ' ') . ' ₽';
     }
 
     private function commercialEstimate(array $data): string

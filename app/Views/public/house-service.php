@@ -38,7 +38,7 @@ $price = service_price($service);
         </ol>
     </div>
 </section>
-<?php $calcLeadType = 'house'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
+<?php $calcLeadType = 'house'; $lockDirection = true; $calcServiceSlug = (string)($service['slug'] ?? ''); require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section">
     <div class="container">
         <div class="section-head">

@@ -234,14 +234,15 @@ final class AdminController
         $slug = trim((string)$request->input('service_slug', ''));
         $priceRaw = trim((string)$request->input('price_per_m2', ''));
         $price = $priceRaw === '' ? null : (int)$priceRaw;
-        $note = trim((string)$request->input('note', '')) ?: 'Стоимость работ без материалов. Предварительный ориентир, требуется утверждение.';
+        $note = trim((string)$request->input('note', '')) ?: 'Стоимость работ без материалов';
+        $unit = (string)$request->input('price_unit', 'm2') === 'room' ? 'room' : 'm2';
         if ((int)$request->input('id') > 0) {
-            $stmt = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, is_active=?, sort_order=?, category=?, service_slug=?, is_approved=?, approved_at=IF(?=1, COALESCE(approved_at, NOW()), NULL), updated_at=NOW() WHERE id=?');
-            $stmt->execute([$request->input('repair_type'), $request->input('package_type'), $price, $note, (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, $slug !== '' ? $slug : null, $approved, $approved, (int)$request->input('id')]);
+            $stmt = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, is_active=?, sort_order=?, category=?, service_slug=?, is_approved=?, price_unit=?, approved_at=IF(?=1, COALESCE(approved_at, NOW()), NULL), updated_at=NOW() WHERE id=?');
+            $stmt->execute([$request->input('repair_type'), $request->input('package_type'), $price, $note, (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, $slug !== '' ? $slug : null, $approved, $unit, $approved, (int)$request->input('id')]);
             return;
         }
-        $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, service_slug, is_approved, approved_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, IF(?=1, NOW(), NULL), NOW(), NOW())');
-        $stmt->execute([$request->input('repair_type'), $request->input('package_type'), $price, $note, (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, $slug !== '' ? $slug : null, $approved, $approved]);
+        $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, service_slug, is_approved, price_unit, approved_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, IF(?=1, NOW(), NULL), NOW(), NOW())');
+        $stmt->execute([$request->input('repair_type'), $request->input('package_type'), $price, $note, (int)$request->input('is_active', 0), (int)$request->input('sort_order', 100), $category, $slug !== '' ? $slug : null, $approved, $unit, $approved]);
     }
 
     private function saveFaq(Request $request): void

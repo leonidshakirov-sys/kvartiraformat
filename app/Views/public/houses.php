@@ -46,7 +46,7 @@ $settings = $settings ?? [];
         <div class="section-head">
             <span class="eyebrow">Стоимость</span>
             <h2>Стоимость ремонтных работ</h2>
-            <p>На сайте публикуются только утверждённые стартовые цены за м² работ без материалов. Остальные позиции — индивидуальный расчёт после осмотра дома.</p>
+            <p>Стартовые цены ремонтных работ без стоимости материалов. Для санузла цена указана за помещение.</p>
         </div>
         <div class="price-table">
             <table>
@@ -67,6 +67,7 @@ $settings = $settings ?? [];
                 </tbody>
             </table>
         </div>
+        <?php require __DIR__ . '/../partials/price-footnote.php'; ?>
     </div>
 </section>
 <section class="section section-muted">

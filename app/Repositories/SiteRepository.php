@@ -621,8 +621,10 @@ final class SiteRepository
                 ? (int)$tariff['price_per_m2']
                 : null;
             $row['price_approved'] = (int)($tariff['is_approved'] ?? 0) === 1;
+            $row['price_unit'] = (string)($tariff['price_unit'] ?? $tariff['unit'] ?? 'm2');
         } else {
             $row['price_approved'] = false;
+            $row['price_unit'] = 'm2';
         }
         if ($category === 'house') {
             $row['url'] = HouseCatalog::path($slug);

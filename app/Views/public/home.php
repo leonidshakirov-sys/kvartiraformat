@@ -101,7 +101,7 @@ $commercialTariffs = $commercialTariffs ?? [];
         <div class="section-head">
             <span class="eyebrow">Стоимость</span>
             <h2>Стоимость ремонтных работ</h2>
-            <p>Цены берутся из единой таблицы тарифов. На сайте показываем только утверждённые суммы «от» за м² работ без материалов. Неутверждённые позиции — индивидуальный расчёт.</p>
+            <p>Стартовые цены ремонтных работ без стоимости материалов. Сумма на карточке и в таблице берётся из одного тарифа.</p>
         </div>
         <div class="media-frame price-photo">
             <?= picture($priceImage) ?>
@@ -135,6 +135,7 @@ $commercialTariffs = $commercialTariffs ?? [];
                 </tbody>
             </table>
         </div>
+        <?php require __DIR__ . '/../partials/price-footnote.php'; ?>
     </div>
 </section>
 <section class="section section-dark" id="about">

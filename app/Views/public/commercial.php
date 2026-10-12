@@ -77,6 +77,30 @@ $processImage = $processImage ?? $heroImage;
         </ol>
     </div>
 </section>
+<section class="section" id="prices">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Стоимость</span>
+            <h2>Стоимость ремонтных работ</h2>
+            <p>Стартовые цены работ без материалов для каждого типа помещения.</p>
+        </div>
+        <div class="price-table">
+            <table>
+                <thead><tr><th>Помещение</th><th>Цена</th><th></th></tr></thead>
+                <tbody>
+                    <?php foreach ($tariffs ?? [] as $t): $price = tariff_price($t); ?>
+                        <tr>
+                            <td><?= e((string)($t['repair_type'] ?? '')) ?></td>
+                            <td><strong><?= e($price['label']) ?></strong><?php if ($price['note'] !== ''): ?><small class="price-note"><?= e($price['note']) ?></small><?php endif; ?></td>
+                            <td><a class="btn btn-small" href="#calculator">Рассчитать</a></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php require __DIR__ . '/../partials/price-footnote.php'; ?>
+    </div>
+</section>
 <?php $calcLeadType = 'commercial'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section section-muted">
     <div class="container">

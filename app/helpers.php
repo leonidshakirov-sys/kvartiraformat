@@ -25,12 +25,22 @@ function route_url(string $path = ''): string
     return '/' . ltrim($path, '/');
 }
 
-function format_price(?int $price, bool $approved = true): string
+function format_price(?int $price, bool $approved = true, string $unit = 'm2'): string
 {
     if (!$approved || !$price || $price <= 0) {
         return 'Индивидуальный расчёт';
     }
-    return 'от ' . number_format($price, 0, ',', ' ') . ' ₽/м²';
+    $amount = number_format($price, 0, ',', ' ');
+    if ($unit === 'room') {
+        return 'от ' . $amount . ' ₽ за помещение';
+    }
+    return 'от ' . $amount . ' ₽/м²';
+}
+
+function price_unit_of(array $item): string
+{
+    $unit = (string)($item['price_unit'] ?? $item['unit'] ?? 'm2');
+    return $unit === 'room' ? 'room' : 'm2';
 }
 
 /**
@@ -41,7 +51,7 @@ function service_price(array $item): array
 {
     $amount = isset($item['price']) && $item['price'] !== '' && $item['price'] !== null ? (int)$item['price'] : null;
     $approved = !empty($item['price_approved']);
-    $label = format_price($amount, $approved);
+    $label = format_price($amount, $approved, price_unit_of($item));
     return [
         'label' => $label,
         'note' => ($approved && $amount && $amount > 0) ? 'Стоимость работ без материалов' : '',
@@ -71,6 +81,7 @@ function tariff_price(array $tariff): array
     return service_price([
         'price' => $tariff['price_per_m2'] ?? null,
         'price_approved' => (int)($tariff['is_approved'] ?? 0) === 1,
+        'price_unit' => $tariff['price_unit'] ?? $tariff['unit'] ?? 'm2',
     ]);
 }
 

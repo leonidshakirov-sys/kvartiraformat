@@ -17,7 +17,7 @@ $heroImage = SiteImages::serviceHero($service);
         <a class="btn btn-primary" href="#calculator">Рассчитать стоимость</a>
     </div>
 </section>
-<?php $calcLeadType = 'apartment'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
+<?php $calcLeadType = 'apartment'; $lockDirection = true; $calcServiceSlug = (string)($service['slug'] ?? ''); require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section">
     <div class="container article">
         <div class="media-frame article-photo">
