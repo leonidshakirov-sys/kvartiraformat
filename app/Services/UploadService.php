@@ -315,7 +315,7 @@ final class UploadService
     private function phpUploadError(int $code): string
     {
         return match ($code) {
-            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Файл превышает лимит сервера.',
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Файл превышает лимит сервера. Можно прикрепить до 15 МБ на файл и 50 МБ на все файлы.',
             UPLOAD_ERR_PARTIAL => 'Файл загружен частично. Повторите попытку.',
             UPLOAD_ERR_NO_TMP_DIR => 'На сервере нет временной папки для загрузки.',
             UPLOAD_ERR_CANT_WRITE => 'Не удалось записать файл на диск.',

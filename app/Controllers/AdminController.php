@@ -14,6 +14,7 @@ use App\Repositories\SiteRepository;
 use App\Services\MailNotifyService;
 use App\Services\TelegramService;
 use App\Services\UploadService;
+use App\Support\QuizCatalog;
 
 final class AdminController
 {
@@ -71,6 +72,7 @@ final class AdminController
             'portfolio' => 'admin/portfolio',
             'seo' => 'admin/seo',
             'calculator' => 'admin/calculator',
+            'quiz' => 'admin/quiz',
             'houses' => 'admin/houses',
             'commercial' => 'admin/commercial',
             'leads' => 'admin/leads',
@@ -95,6 +97,7 @@ final class AdminController
                 'save_service' => $this->saveService($request),
                 'save_geo' => $this->repo->upsertGeo($request->post()),
                 'save_tariff' => $this->saveTariff($request),
+                'save_quiz' => $this->saveQuiz($request),
                 'save_faq' => $this->saveFaq($request),
                 'save_advantage' => $this->saveAdvantage($request),
                 'save_portfolio' => $this->savePortfolio($request),
@@ -221,6 +224,12 @@ final class AdminController
             throw new \RuntimeException('Нет данных для сохранения.');
         }
         $this->repo->updateSettings($values);
+    }
+
+    private function saveQuiz(Request $request): void
+    {
+        $config = QuizCatalog::configFromPost($request->post());
+        $this->repo->updateSettings(['quiz_config' => $config]);
     }
 
     private function saveTariff(Request $request): void

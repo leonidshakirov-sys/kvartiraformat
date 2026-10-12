@@ -25,6 +25,7 @@ final class SchemaMigrator
         self::ensureCosmeticPhoto($pdo);
         self::ensureCapitalPhoto($pdo);
         self::ensurePortfolioWorks($pdo);
+        self::ensureQuiz($pdo);
 
         if (self::hasSetting($pdo, self::VERSION_KEY)) {
             if (!self::hasCommercialServices($pdo)) {
@@ -224,6 +225,21 @@ final class SchemaMigrator
             'commercial_hub_published' => '1',
         ] as $key => $value) {
             $set->execute([$key, $value]);
+        }
+    }
+
+    private static function ensureQuiz(PDO $pdo): void
+    {
+        if (!self::tableExists($pdo, 'leads')) {
+            return;
+        }
+        $fresh = !self::hasSetting($pdo, 'schema_quiz_v1');
+        if ($fresh) {
+            self::backup($pdo);
+        }
+        self::ensureColumn($pdo, 'leads', 'quiz_payload', 'MEDIUMTEXT NULL');
+        if ($fresh) {
+            self::touchSetting($pdo, 'schema_quiz_v1', '1');
         }
     }
 

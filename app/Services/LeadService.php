@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Repositories\SiteRepository;
 use App\Support\CommercialCatalog;
 use App\Support\HouseCatalog;
+use App\Support\QuizCatalog;
 use PDO;
 
 final class LeadService
@@ -27,7 +28,52 @@ final class LeadService
     public function submit(array $data, Request $request, array $files = []): array
     {
         $files = $this->normalizeIncoming($files);
-        $errors = $this->validate($data, $files);
+        $quizErrors = [];
+        $quizPayload = null;
+        $estimateFromQuiz = null;
+        if (isset($data['quiz']) && is_array($data['quiz'])) {
+            $quote = $this->quote($data);
+            if (empty($quote['ok'])) {
+                $quizErrors = $quote['errors'] ?? ['Проверьте ответы квиза.'];
+            } else {
+                $data['lead_type'] = (string)($quote['direction'] ?? 'apartment');
+                $data['property_type'] = (string)($quote['property_type'] ?? '');
+                $data['repair_type'] = (string)($quote['repair_label'] ?? '');
+                $data['area'] = $quote['area'];
+                $data['extras'] = $quote['extras_list'] ?? [];
+                $data['premise_condition'] = (string)($quote['condition_label'] ?? '');
+                $data['has_project'] = (string)($quote['project_label'] ?? '');
+                $data['floors'] = (string)($quote['floors_label'] ?? '');
+                $data['package_type'] = 'Только работы';
+                $data['source'] = 'quiz';
+                if (!empty($quote['service_slug'])) {
+                    $data['service_slug'] = (string)$quote['service_slug'];
+                }
+                $estimateFromQuiz = (string)($quote['summary'] ?? 'Индивидуальный расчёт');
+                $quizPayload = json_encode([
+                    'version' => 1,
+                    'direction' => $quote['direction'] ?? '',
+                    'object' => $quote['object_label'] ?? '',
+                    'detail' => $quote['detail_label'] ?? '',
+                    'repair' => $quote['repair_label'] ?? '',
+                    'area' => $quote['area_label'] ?? '',
+                    'condition' => $quote['condition_label'] ?? '',
+                    'extras' => $quote['extras_label'] ?? '',
+                    'floors' => $quote['floors_label'] ?? '',
+                    'project' => $quote['project_label'] ?? '',
+                    'price_label' => $quote['price_label'] ?? '',
+                    'total_label' => $quote['total_label'] ?? '',
+                    'summary' => $estimateFromQuiz,
+                    'tariff_slug' => $quote['tariff_slug'] ?? '',
+                    'individual' => !empty($quote['individual']),
+                    'coefficient_applied' => !empty($quote['coefficient_applied']),
+                    'basis' => $quote['basis'] ?? '',
+                    'lines' => $quote['lines'] ?? [],
+                    'service_slug' => $quote['service_slug'] ?? '',
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+        }
+        $errors = array_merge($quizErrors, $this->validate($data, $files));
         if ($errors) {
             return ['ok' => false, 'errors' => $errors];
         }
@@ -50,7 +96,7 @@ final class LeadService
         if ($special !== '') {
             $data['comment'] = trim((string)($data['comment'] ?? '') . "\nОсобые требования: " . $special);
         }
-        $estimate = $this->estimate($data);
+        $estimate = $estimateFromQuiz ?? $this->estimate($data);
         $hasLeadType = $this->hasLeadExtraColumns($pdo);
         if ($hasLeadType) {
             $stmt = $pdo->prepare('INSERT INTO leads (public_id, name, phone, city, repair_type, property_type, area, rooms, package_type, extras, comment, estimate_text, page_url, source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer, ip_address, user_agent, consent_version, consent_text, status, idempotency_key, lead_type, work_start, has_project, premise_condition, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "new", ?, ?, ?, ?, ?, NOW(), NOW())');
@@ -96,6 +142,7 @@ final class LeadService
         }
         $stmt->execute($params);
         $leadId = (int)$pdo->lastInsertId();
+        $this->storeQuizPayload($pdo, $leadId, $quizPayload);
 
         $fileCount = 0;
         if ($this->uploads && $files) {
@@ -125,8 +172,25 @@ final class LeadService
         return ['ok' => true, 'lead_id' => $leadId, 'public_id' => $publicId, 'estimate' => $estimate];
     }
 
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public function quote(array $data): array
+    {
+        return QuizCatalog::quote($data, [
+            'apartment' => $this->repo->tariffs('apartment'),
+            'house' => $this->repo->tariffs('house'),
+            'commercial' => $this->repo->tariffs('commercial'),
+        ], $this->repo->settings());
+    }
+
     public function estimate(array $data): string
     {
+        if (isset($data['quiz']) && is_array($data['quiz'])) {
+            $quote = $this->quote($data);
+            return (string)($quote['summary'] ?? 'Индивидуальный расчёт');
+        }
         $leadType = $this->leadType($data);
         if ($leadType === 'house') {
             return $this->pricedEstimate($data, 'house') ?? HouseCatalog::INDIVIDUAL_ESTIMATE;
@@ -285,6 +349,8 @@ final class LeadService
             . $line('Объект', $data['property_type'] ?? '') . "\n"
             . $line('Вид работ', $data['repair_type'] ?? ($data['premise_condition'] ?? '')) . "\n"
             . $line('Площадь', ($data['area'] ?? '') !== '' ? ($data['area'] . ' м²') : '') . "\n"
+            . $line('Состояние', $data['premise_condition'] ?? '') . "\n"
+            . $line('Дополнительно', $this->cleanExtras($data['extras'] ?? [])) . "\n"
             . $line('Ориентир', $estimate) . "\n"
             . $line('Страница', $data['page_url'] ?? '/');
     }
@@ -333,6 +399,28 @@ final class LeadService
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
         $stmt->execute(['leads', 'lead_type']);
         return $cached = (int)$stmt->fetchColumn() > 0;
+    }
+
+    private function storeQuizPayload(PDO $pdo, int $leadId, ?string $payload): void
+    {
+        if ($leadId <= 0 || $payload === null || $payload === '') {
+            return;
+        }
+        try {
+            if (!$this->hasColumn($pdo, 'leads', 'quiz_payload')) {
+                return;
+            }
+            $pdo->prepare('UPDATE leads SET quiz_payload = ? WHERE id = ?')->execute([$payload, $leadId]);
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    private function hasColumn(PDO $pdo, string $table, string $column): bool
+    {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+        $stmt->execute([$table, $column]);
+        return (int)$stmt->fetchColumn() > 0;
     }
 
     private function nullableFloat(mixed $value): ?float

@@ -9,7 +9,13 @@ function e(?string $value): string
 
 function asset(string $path): string
 {
-    return '/assets/' . ltrim($path, '/');
+    $relative = ltrim($path, '/');
+    $url = '/assets/' . $relative;
+    $full = dirname(__DIR__) . '/public/assets/' . $relative;
+    if (is_file($full)) {
+        $url .= '?v=' . filemtime($full);
+    }
+    return $url;
 }
 
 function upload_url(?string $path): string

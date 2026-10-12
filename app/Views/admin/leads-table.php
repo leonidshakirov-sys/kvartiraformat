@@ -9,7 +9,35 @@ $leadLabels = ['apartment' => 'Квартира', 'house' => 'Дом', 'commerci
 <td><?= e($lead['name'] ?? '') ?></td>
 <td><?= e($lead['phone'] ?? '') ?></td>
 <td><?= e($lead['city'] ?? '') ?></td>
-<td><?= e(trim(($lead['property_type'] ?? '') . ' ' . ($lead['repair_type'] ?? $lead['premise_condition'] ?? ''))) ?></td>
+<td>
+    <?php
+        $payload = json_decode((string)($lead['quiz_payload'] ?? ''), true);
+        $lines = is_array($payload['lines'] ?? null) ? $payload['lines'] : [];
+        $utm = array_filter([
+            $lead['utm_source'] ?? '',
+            $lead['utm_medium'] ?? '',
+            $lead['utm_campaign'] ?? '',
+            $lead['utm_content'] ?? '',
+            $lead['utm_term'] ?? '',
+        ], static fn($value) => trim((string)$value) !== '');
+    ?>
+    <dl class="lead-quiz">
+        <dt>Объект</dt><dd><?= e(trim((string)($lead['property_type'] ?? '')) !== '' ? (string)$lead['property_type'] : 'не указан') ?></dd>
+        <dt>Ремонт</dt><dd><?= e(trim((string)($lead['repair_type'] ?? '')) !== '' ? (string)$lead['repair_type'] : 'не указан') ?></dd>
+        <dt>Площадь</dt><dd><?= isset($lead['area']) && $lead['area'] !== '' && $lead['area'] !== null ? e((string)$lead['area'] . ' м²') : 'не указана' ?></dd>
+        <dt>Состояние</dt><dd><?= e(trim((string)($lead['premise_condition'] ?? '')) !== '' ? (string)$lead['premise_condition'] : 'не указано') ?></dd>
+        <dt>Дополнительно</dt><dd><?= e(trim((string)($lead['extras'] ?? '')) !== '' ? (string)$lead['extras'] : 'не указано') ?></dd>
+        <?php if (trim((string)($lead['rooms'] ?? '')) !== ''): ?><dt>Комнаты или этажи</dt><dd><?= e((string)$lead['rooms']) ?></dd><?php endif; ?>
+        <?php if (trim((string)($lead['has_project'] ?? '')) !== ''): ?><dt>Проект</dt><dd><?= e((string)$lead['has_project']) ?></dd><?php endif; ?>
+        <dt>Источник</dt><dd><?= e(trim((string)($lead['source'] ?? '')) !== '' ? (string)$lead['source'] : 'сайт') ?></dd>
+        <dt>UTM</dt><dd><?= e($utm ? implode(' / ', $utm) : 'нет') ?></dd>
+        <?php if (trim((string)($lead['comment'] ?? '')) !== ''): ?><dt>Комментарий</dt><dd><?= e((string)$lead['comment']) ?></dd><?php endif; ?>
+        <?php if (!empty($payload['summary'])): ?><dt>Расчёт квиза</dt><dd><?= e((string)$payload['summary']) ?></dd><?php endif; ?>
+        <?php foreach ($lines as $label => $value): if (trim((string)$value) === '') continue; ?>
+            <dt><?= e((string)$label) ?></dt><dd><?= e((string)$value) ?></dd>
+        <?php endforeach; ?>
+    </dl>
+</td>
 <td><?= e($lead['estimate_text'] ?? '') ?></td>
 <td>
     <?php $files = $lead['files'] ?? []; if (!$files): ?>
