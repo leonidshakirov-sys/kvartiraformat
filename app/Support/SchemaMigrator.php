@@ -23,6 +23,7 @@ final class SchemaMigrator
         self::syncApprovedTariffs($pdo);
         self::cleanupPublicFaqs($pdo);
         self::ensureCosmeticPhoto($pdo);
+        self::ensureCapitalPhoto($pdo);
 
         if (self::hasSetting($pdo, self::VERSION_KEY)) {
             if (!self::hasCommercialServices($pdo)) {
@@ -295,6 +296,29 @@ final class SchemaMigrator
                 'kosmeticheskiy',
             ]);
             self::touchSetting($pdo, 'schema_cosmetic_photo_v1', '1');
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    private static function ensureCapitalPhoto(PDO $pdo): void
+    {
+        if (self::hasSetting($pdo, 'schema_capital_photo_v1') || !self::tableExists($pdo, 'services')) {
+            return;
+        }
+        try {
+            $stmt = $pdo->prepare('UPDATE services SET image_path = ?, image_alt = ?, updated_at = NOW() WHERE slug = ?');
+            $stmt->execute([
+                '/assets/images/services/capital.webp',
+                'Мастер в форме КвартираФормат штукатурит стену при капитальном ремонте',
+                'kapitalnyy-remont',
+            ]);
+            $stmt->execute([
+                '/assets/images/houses/capital.webp',
+                'Мастер в форме КвартираФормат штукатурит стену при капитальном ремонте дома',
+                'kapitalnyy',
+            ]);
+            self::touchSetting($pdo, 'schema_capital_photo_v1', '1');
         } catch (\Throwable) {
             return;
         }

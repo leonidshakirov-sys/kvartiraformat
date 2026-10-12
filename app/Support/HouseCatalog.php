@@ -177,7 +177,7 @@ final class HouseCatalog
         return [
             'hero' => ['src' => '/assets/images/houses/hero.webp', 'alt' => 'Гостиная частного дома после внутренней отделки', 'width' => 1600, 'height' => 1067],
             'turnkey' => ['src' => '/assets/images/houses/turnkey.webp', 'alt' => 'Интерьер частного дома после комплексного ремонта', 'width' => 1600, 'height' => 1067],
-            'capital' => ['src' => '/assets/images/houses/capital.webp', 'alt' => 'Черновая подготовка помещений в частном доме', 'width' => 1600, 'height' => 1067],
+            'capital' => ['src' => '/assets/images/houses/capital.webp', 'alt' => 'Мастер в форме КвартираФормат штукатурит стену при капитальном ремонте дома', 'width' => 1448, 'height' => 1086],
             'cosmetic' => ['src' => '/assets/images/houses/cosmetic.webp', 'alt' => 'Мастер в форме КвартираФормат красит стену валиком при косметическом ремонте дома', 'width' => 1448, 'height' => 1086],
             'cottage' => ['src' => '/assets/images/houses/cottage.webp', 'alt' => 'Внутренняя отделка коттеджа: лестница и холл', 'width' => 1600, 'height' => 1067],
             'townhouse' => ['src' => '/assets/images/houses/townhouse.webp', 'alt' => 'Интерьер таунхауса после отделки', 'width' => 1600, 'height' => 1067],
