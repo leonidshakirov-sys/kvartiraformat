@@ -101,7 +101,7 @@ $commercialTariffs = $commercialTariffs ?? [];
         <div class="section-head">
             <span class="eyebrow">Стоимость</span>
             <h2>Стоимость ремонтных работ</h2>
-            <p>Цены берутся из единой таблицы тарифов. На сайте показываем только утверждённые суммы «от» за м² работ без материалов. Неутверждённые позиции — индивидуальный расчёт.</p>
+            <p>Стартовые цены ремонтных работ без стоимости материалов. Сумма на карточке и в таблице берётся из одного тарифа.</p>
         </div>
         <div class="media-frame price-photo">
             <?= picture($priceImage) ?>
@@ -135,6 +135,7 @@ $commercialTariffs = $commercialTariffs ?? [];
                 </tbody>
             </table>
         </div>
+        <?php require __DIR__ . '/../partials/price-footnote.php'; ?>
     </div>
 </section>
 <section class="section section-dark" id="about">
@@ -156,14 +157,14 @@ $commercialTariffs = $commercialTariffs ?? [];
 <section class="section section-muted">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Примеры</span>
-            <h2>Примеры интерьеров и вариантов отделки</h2>
-            <p>Подборка помогает понять уровень отделки. Когда появятся съёмки выполненных объектов, опубликуем раздел «Наши работы».</p>
+            <span class="eyebrow">Наши работы</span>
+            <h2>Наши работы</h2>
+            <p>Посмотрите примеры ремонта квартир, домов и коммерческих помещений, выполненного нашей командой.</p>
         </div>
         <div class="portfolio-grid">
             <?php foreach ($portfolio as $index => $item): $headingTag = 'h3'; require __DIR__ . '/../partials/portfolio-card.php'; endforeach; ?>
         </div>
-        <a class="btn btn-outline" href="/portfolio/">Смотреть портфолио</a>
+        <a class="btn btn-outline" href="/portfolio/">Смотреть все работы</a>
     </div>
 </section>
 <section class="section section-surface">

@@ -187,7 +187,7 @@ final class SiteImages
                 'cost' => '',
                 'duration' => '',
                 'works' => '',
-                'is_demo' => 1,
+                'is_demo' => 0,
                 'image_key' => $image['key'],
                 'images' => [],
                 'sort_order' => ($i + 1) * 10,
@@ -219,12 +219,12 @@ final class SiteImages
                 'page' => ['src' => '/assets/images/services/turnkey-page.webp', 'alt' => 'Готовый современный интерьер квартиры после ремонта под ключ', 'width' => 1600, 'height' => 900],
             ],
             'kapitalnyy-remont' => [
-                'card' => ['src' => '/assets/images/services/capital.webp', 'alt' => 'Стяжка и черновые работы при капитальном ремонте', 'width' => 1200, 'height' => 840],
-                'page' => ['src' => '/assets/images/services/capital-page.webp', 'alt' => 'Штукатурка стен при капитальном ремонте', 'width' => 1600, 'height' => 900],
+                'card' => ['src' => '/assets/images/services/capital.webp', 'alt' => 'Мастер в форме КвартираФормат штукатурит стену при капитальном ремонте', 'width' => 1448, 'height' => 1086],
+                'page' => ['src' => '/assets/images/services/capital-page.webp', 'alt' => 'Мастер в форме КвартираФормат штукатурит стену при капитальном ремонте', 'width' => 1448, 'height' => 1086],
             ],
             'kosmeticheskiy-remont' => [
-                'card' => ['src' => '/assets/images/services/cosmetic.webp', 'alt' => 'Покраска стен при косметическом ремонте', 'width' => 1200, 'height' => 840],
-                'page' => ['src' => '/assets/images/services/cosmetic-page.webp', 'alt' => 'Обычная квартира после косметического обновления', 'width' => 1600, 'height' => 900],
+                'card' => ['src' => '/assets/images/services/cosmetic.webp', 'alt' => 'Мастер в форме КвартираФормат красит стену валиком при косметическом ремонте', 'width' => 1448, 'height' => 1086],
+                'page' => ['src' => '/assets/images/services/cosmetic-page.webp', 'alt' => 'Мастер в форме КвартираФормат красит стену валиком при косметическом ремонте', 'width' => 1448, 'height' => 1086],
             ],
             'dizaynerskiy-remont' => [
                 'card' => ['src' => '/assets/images/services/designer.webp', 'alt' => 'Дизайнерский ремонт квартиры', 'width' => 1200, 'height' => 840],

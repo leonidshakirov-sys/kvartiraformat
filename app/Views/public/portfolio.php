@@ -1,8 +1,8 @@
 <section class="page-hero">
     <div class="container">
-        <nav class="breadcrumbs"><a href="/">Главная</a><span>Портфолио</span></nav>
+        <nav class="breadcrumbs"><a href="/">Главная</a><span>Наши работы</span></nav>
         <h1><?= e($h1) ?></h1>
-        <p>Примеры интерьеров и вариантов отделки. Когда появятся съёмки выполненных объектов, опубликуем их в разделе «Наши работы».</p>
+        <p>Посмотрите примеры ремонта квартир, домов и коммерческих помещений, выполненного нашей командой.</p>
     </div>
 </section>
 <section class="section">

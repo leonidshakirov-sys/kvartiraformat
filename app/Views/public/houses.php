@@ -46,7 +46,7 @@ $settings = $settings ?? [];
         <div class="section-head">
             <span class="eyebrow">Стоимость</span>
             <h2>Стоимость ремонтных работ</h2>
-            <p>На сайте публикуются только утверждённые стартовые цены за м² работ без материалов. Остальные позиции — индивидуальный расчёт после осмотра дома.</p>
+            <p>Стартовые цены ремонтных работ без стоимости материалов. Для санузла цена указана за помещение.</p>
         </div>
         <div class="price-table">
             <table>
@@ -67,6 +67,7 @@ $settings = $settings ?? [];
                 </tbody>
             </table>
         </div>
+        <?php require __DIR__ . '/../partials/price-footnote.php'; ?>
     </div>
 </section>
 <section class="section section-muted">
@@ -109,31 +110,16 @@ $settings = $settings ?? [];
 <section class="section">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Примеры</span>
-            <h2>Примеры интерьеров и вариантов отделки</h2>
-            <p>Подборка помогает понять характер отделки частных домов. Когда появятся съёмки выполненных объектов, опубликуем их отдельным разделом.</p>
+            <span class="eyebrow">Наши работы</span>
+            <h2>Наши работы</h2>
+            <p>Посмотрите примеры ремонта квартир, домов и коммерческих помещений, выполненного нашей командой.</p>
         </div>
+        <?php if (!empty($portfolio)): ?>
         <div class="portfolio-grid">
-            <?php
-            $examples = $portfolio ?: array_slice($houseServices, 0, 6);
-            foreach ($examples as $index => $item):
-                if (isset($item['title']) && isset($item['image_path']) && empty($item['repair_type'])) {
-                    $item = [
-                        'title' => $item['title'],
-                        'city' => '',
-                        'district' => '',
-                        'area' => '',
-                        'repair_type' => '',
-                        'works' => '',
-                        'is_demo' => 0,
-                        'images' => [['file_path' => $item['image_path'], 'alt_text' => $item['image_alt'] ?? $item['title']]],
-                    ];
-                }
-                $headingTag = 'h3';
-                require __DIR__ . '/../partials/portfolio-card.php';
-            endforeach;
-            ?>
+            <?php foreach ($portfolio as $index => $item): $headingTag = 'h3'; require __DIR__ . '/../partials/portfolio-card.php'; endforeach; ?>
         </div>
+        <?php endif; ?>
+        <a class="btn btn-outline" href="/portfolio/">Смотреть все работы</a>
     </div>
 </section>
 <section class="section section-muted" id="geo">

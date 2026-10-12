@@ -22,6 +22,9 @@ final class SchemaMigrator
         self::ensureStartingPrices($pdo);
         self::syncApprovedTariffs($pdo);
         self::cleanupPublicFaqs($pdo);
+        self::ensureCosmeticPhoto($pdo);
+        self::ensureCapitalPhoto($pdo);
+        self::ensurePortfolioWorks($pdo);
 
         if (self::hasSetting($pdo, self::VERSION_KEY)) {
             if (!self::hasCommercialServices($pdo)) {
@@ -276,6 +279,73 @@ final class SchemaMigrator
         return (int)$stmt->fetchColumn() > 0;
     }
 
+    private static function ensureCosmeticPhoto(PDO $pdo): void
+    {
+        if (self::hasSetting($pdo, 'schema_cosmetic_photo_v1') || !self::tableExists($pdo, 'services')) {
+            return;
+        }
+        try {
+            $stmt = $pdo->prepare('UPDATE services SET image_path = ?, image_alt = ?, updated_at = NOW() WHERE slug = ?');
+            $stmt->execute([
+                '/assets/images/services/cosmetic.webp',
+                'Мастер в форме КвартираФормат красит стену валиком при косметическом ремонте',
+                'kosmeticheskiy-remont',
+            ]);
+            $stmt->execute([
+                '/assets/images/houses/cosmetic.webp',
+                'Мастер в форме КвартираФормат красит стену валиком при косметическом ремонте дома',
+                'kosmeticheskiy',
+            ]);
+            self::touchSetting($pdo, 'schema_cosmetic_photo_v1', '1');
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    private static function ensureCapitalPhoto(PDO $pdo): void
+    {
+        if (self::hasSetting($pdo, 'schema_capital_photo_v1') || !self::tableExists($pdo, 'services')) {
+            return;
+        }
+        try {
+            $stmt = $pdo->prepare('UPDATE services SET image_path = ?, image_alt = ?, updated_at = NOW() WHERE slug = ?');
+            $stmt->execute([
+                '/assets/images/services/capital.webp',
+                'Мастер в форме КвартираФормат штукатурит стену при капитальном ремонте',
+                'kapitalnyy-remont',
+            ]);
+            $stmt->execute([
+                '/assets/images/houses/capital.webp',
+                'Мастер в форме КвартираФормат штукатурит стену при капитальном ремонте дома',
+                'kapitalnyy',
+            ]);
+            self::touchSetting($pdo, 'schema_capital_photo_v1', '1');
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
+    private static function ensurePortfolioWorks(PDO $pdo): void
+    {
+        if (self::hasSetting($pdo, 'schema_portfolio_works_v1') || !self::tableExists($pdo, 'portfolio_items')) {
+            return;
+        }
+        try {
+            $pdo->exec("UPDATE portfolio_items SET is_published = 0, updated_at = NOW() WHERE title LIKE '%Демонстрацион%'");
+            $rows = $pdo->query('SELECT id, works FROM portfolio_items')->fetchAll();
+            $update = $pdo->prepare('UPDATE portfolio_items SET works = ?, is_demo = 0, updated_at = NOW() WHERE id = ?');
+            foreach ($rows as $row) {
+                $clean = portfolio_public_works((string)($row['works'] ?? ''));
+                if ($clean !== trim((string)($row['works'] ?? ''))) {
+                    $update->execute([$clean, (int)$row['id']]);
+                }
+            }
+            self::touchSetting($pdo, 'schema_portfolio_works_v1', '1');
+        } catch (\Throwable) {
+            return;
+        }
+    }
+
     private static function ensureStartingPrices(PDO $pdo): void
     {
         self::syncApprovedTariffs($pdo);
@@ -289,30 +359,91 @@ final class SchemaMigrator
         self::ensureColumn($pdo, 'repair_tariffs', 'is_approved', 'TINYINT(1) NOT NULL DEFAULT 0');
         self::ensureColumn($pdo, 'repair_tariffs', 'includes_materials', 'TINYINT(1) NOT NULL DEFAULT 0');
         self::ensureColumn($pdo, 'repair_tariffs', 'service_slug', 'VARCHAR(160) NULL');
-        $hasCategory = self::columnExists($pdo, 'repair_tariffs', 'category');
-        $reset = !self::hasSetting($pdo, 'schema_prices_v2');
+        self::ensureColumn($pdo, 'repair_tariffs', 'price_unit', "VARCHAR(16) NOT NULL DEFAULT 'm2'");
+        self::ensureColumn($pdo, 'repair_tariffs', 'approved_at', 'DATETIME NULL');
+        if (!self::columnExists($pdo, 'repair_tariffs', 'category')) {
+            return;
+        }
+
+        $publish = !self::hasSetting($pdo, 'schema_prices_approved_v3');
+        $kept = [];
+        $findBySlug = $pdo->prepare('SELECT id FROM repair_tariffs WHERE category = ? AND service_slug = ? ORDER BY id LIMIT 1');
+        $findByType = $pdo->prepare('SELECT id FROM repair_tariffs WHERE category = ? AND repair_type = ? AND package_type = ? ORDER BY id LIMIT 1');
+        $update = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, category=?, sort_order=?, service_slug=?, includes_materials=?, is_approved=1, price_unit=?, is_active=1, approved_at=COALESCE(approved_at, NOW()), updated_at=NOW() WHERE id=?');
+        $insert = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, service_slug, includes_materials, is_approved, price_unit, approved_at, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, 1, ?, NOW(), NOW(), NOW())');
+
         foreach (StartingPrices::catalog() as $tariff) {
-            $price = $tariff['price_per_m2'];
             try {
-                if ($hasCategory && self::columnExists($pdo, 'repair_tariffs', 'service_slug')) {
-                    $found = $pdo->prepare('SELECT id, is_approved FROM repair_tariffs WHERE service_slug = ? OR (category = ? AND repair_type = ? AND package_type = ?) LIMIT 1');
-                    $found->execute([$tariff['slug'], $tariff['category'], $tariff['repair_type'], $tariff['package_type']]);
-                    $row = $found->fetch() ?: null;
-                    if ($row) {
-                        $approved = $reset ? 0 : (int)$row['is_approved'];
-                        $stmt = $pdo->prepare('UPDATE repair_tariffs SET repair_type=?, package_type=?, price_per_m2=?, note=?, category=?, sort_order=?, service_slug=?, includes_materials=?, is_approved=?, updated_at=NOW() WHERE id=?');
-                        $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $price, $tariff['note'], $tariff['category'], $tariff['sort_order'], $tariff['slug'], $tariff['includes_materials'], $approved, (int)$row['id']]);
-                    } else {
-                        $stmt = $pdo->prepare('INSERT INTO repair_tariffs (repair_type, package_type, price_per_m2, note, is_active, sort_order, category, service_slug, includes_materials, is_approved, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, 0, NOW(), NOW())');
-                        $stmt->execute([$tariff['repair_type'], $tariff['package_type'], $price, $tariff['note'], $tariff['sort_order'], $tariff['category'], $tariff['slug'], $tariff['includes_materials']]);
+                $findBySlug->execute([$tariff['category'], $tariff['slug']]);
+                $id = (int)($findBySlug->fetchColumn() ?: 0);
+                if ($id === 0) {
+                    $findByType->execute([$tariff['category'], $tariff['repair_type'], $tariff['package_type']]);
+                    $id = (int)($findByType->fetchColumn() ?: 0);
+                }
+                if ($id > 0) {
+                    if ($publish) {
+                        $update->execute([
+                            $tariff['repair_type'],
+                            $tariff['package_type'],
+                            $tariff['price_per_m2'],
+                            $tariff['note'],
+                            $tariff['category'],
+                            $tariff['sort_order'],
+                            $tariff['slug'],
+                            $tariff['includes_materials'],
+                            $tariff['unit'],
+                            $id,
+                        ]);
                     }
+                    $kept[] = $id;
+                    $hide = $pdo->prepare('UPDATE repair_tariffs SET is_active = 0, updated_at = NOW() WHERE category = ? AND id <> ? AND is_active = 1 AND (service_slug = ? OR (repair_type = ? AND package_type = ?))');
+                    $hide->execute([$tariff['category'], $id, $tariff['slug'], $tariff['repair_type'], $tariff['package_type']]);
+                } else {
+                    $insert->execute([
+                        $tariff['repair_type'],
+                        $tariff['package_type'],
+                        $tariff['price_per_m2'],
+                        $tariff['note'],
+                        $tariff['sort_order'],
+                        $tariff['category'],
+                        $tariff['slug'],
+                        $tariff['includes_materials'],
+                        $tariff['unit'],
+                    ]);
+                    $kept[] = (int)$pdo->lastInsertId();
                 }
             } catch (\Throwable) {
                 continue;
             }
         }
-        if ($reset) {
+
+        if ($publish && $kept) {
+            $placeholders = implode(',', array_fill(0, count($kept), '?'));
+            $retire = $pdo->prepare("UPDATE repair_tariffs SET is_active = 0, updated_at = NOW() WHERE category IN ('apartment','house','commercial') AND id NOT IN ({$placeholders}) AND (service_slug IS NULL OR service_slug = '' OR service_slug NOT IN (" . implode(',', array_fill(0, count(StartingPrices::catalog()), '?')) . '))');
+            $slugs = array_map(static fn(array $item): string => $item['slug'], StartingPrices::catalog());
+            $retire->execute(array_merge($kept, $slugs));
             self::touchSetting($pdo, 'schema_prices_v2', '1');
+            self::touchSetting($pdo, 'schema_prices_approved_v3', '1');
+            self::refreshPublishedPriceCopy($pdo);
+        }
+    }
+
+    private static function refreshPublishedPriceCopy(PDO $pdo): void
+    {
+        try {
+            if (self::tableExists($pdo, 'services')) {
+                $stmt = $pdo->prepare('UPDATE services SET meta_description = ? WHERE slug = ?');
+                $stmt->execute(['Ремонт санузлов в частных домах: плитка, гидроизоляция и сантехника. Стартовая цена работ без материалов — за помещение.', 'sanuzlov']);
+                $stmt->execute(['Внутренняя отделка помещений общественного питания в Москве и МО. Стартовая цена работ без материалов указана на странице.', 'remont-kafe-restoranov']);
+                $pdo->exec("UPDATE services SET body = REPLACE(body, 'Поэтому мы не публикуем универсальную цену за м² склада.', 'Стартовая цена работ без материалов указана в карточке услуги.') WHERE slug = 'remont-skladskih-pomescheniy'");
+            }
+            if (self::tableExists($pdo, 'faqs')) {
+                $faq = $pdo->prepare('UPDATE faqs SET answer = ?, updated_at = NOW() WHERE question = ?');
+                $faq->execute(['Ремонт дома считаем отдельно от квартиры: учитываем этажность, площадь и состояние отделки. На сайте опубликована стартовая цена работ без материалов, точная смета — после осмотра.', 'Сколько стоит ремонт дома?']);
+                $faq->execute(['Для коммерции важны назначение помещения, площадь, состояние и техническое задание. На сайте указана стартовая цена работ без материалов, точная смета — после осмотра.', 'Как рассчитывается стоимость коммерческого ремонта?']);
+            }
+        } catch (\Throwable) {
+            return;
         }
     }
 

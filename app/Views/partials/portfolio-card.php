@@ -7,7 +7,6 @@ $headingTag = $headingTag ?? 'h3';
     <div class="media-frame portfolio-photo">
         <?= picture($image) ?>
     </div>
-    <?php /* Public cards do not label examples as company portfolio. */ ?>
     <<?= $headingTag ?>><?= e($item['title']) ?></<?= $headingTag ?>>
     <?php if (!empty($item['city']) || !empty($item['district'])): ?>
         <p><?= e(trim(($item['city'] ?? '') . ' ' . ($item['district'] ?? ''))) ?></p>
@@ -27,5 +26,5 @@ $headingTag = $headingTag ?? 'h3';
             <?php endforeach; ?>
         </dl>
     <?php endif; ?>
-    <?php if (!empty($item['works'])): ?><p><?= e($item['works']) ?></p><?php endif; ?>
+    <?php $works = portfolio_public_works($item['works'] ?? ''); if ($works !== ''): ?><p><?= e($works) ?></p><?php endif; ?>
 </article>

@@ -104,7 +104,7 @@
 </section>
 <section class="admin-panel">
     <h2>Портфолио коммерческих объектов</h2>
-    <p>Публикуйте только реальные объекты. Иллюстрации помечайте как демо.</p>
+    <p>Добавляйте выполненные коммерческие объекты. Город, площадь и описание указывайте только по подтверждённым данным.</p>
     <?php if (!empty($commercialPortfolio)): ?>
         <div class="cards compact">
             <?php foreach ($commercialPortfolio as $item): ?>
@@ -122,7 +122,7 @@
         <label>Площадь<input name="area"></label>
         <label>Фото<input type="file" name="image" accept="image/*"></label>
         <label>ALT<input name="image_alt"></label>
-        <label><input type="checkbox" name="is_demo" value="1"> Иллюстрация, не наш объект</label>
+        <label><input type="checkbox" name="is_demo" value="1"> Не работа компании</label>
         <label><input type="checkbox" name="is_published" value="1" checked> Опубликовать</label>
         <label class="full">Описание<textarea name="works" rows="3"></textarea></label>
         <button class="btn btn-primary">Добавить объект</button>

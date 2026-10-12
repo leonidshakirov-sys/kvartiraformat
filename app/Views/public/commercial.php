@@ -77,28 +77,44 @@ $processImage = $processImage ?? $heroImage;
         </ol>
     </div>
 </section>
+<section class="section" id="prices">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Стоимость</span>
+            <h2>Стоимость ремонтных работ</h2>
+            <p>Стартовые цены работ без материалов для каждого типа помещения.</p>
+        </div>
+        <div class="price-table">
+            <table>
+                <thead><tr><th>Помещение</th><th>Цена</th><th></th></tr></thead>
+                <tbody>
+                    <?php foreach ($tariffs ?? [] as $t): $price = tariff_price($t); ?>
+                        <tr>
+                            <td><?= e((string)($t['repair_type'] ?? '')) ?></td>
+                            <td><strong><?= e($price['label']) ?></strong><?php if ($price['note'] !== ''): ?><small class="price-note"><?= e($price['note']) ?></small><?php endif; ?></td>
+                            <td><a class="btn btn-small" href="#calculator">Рассчитать</a></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php require __DIR__ . '/../partials/price-footnote.php'; ?>
+    </div>
+</section>
 <?php $calcLeadType = 'commercial'; $lockDirection = true; require __DIR__ . '/../partials/calculator.php'; ?>
 <section class="section section-muted">
     <div class="container">
         <div class="section-head">
-            <span class="eyebrow">Примеры</span>
-            <h2>Примеры интерьеров и вариантов отделки</h2>
-            <p>Примеры помещений разного назначения. Когда появятся съёмки выполненных объектов, опубликуем раздел «Наши работы».</p>
+            <span class="eyebrow">Наши работы</span>
+            <h2>Наши работы</h2>
+            <p>Посмотрите примеры ремонта квартир, домов и коммерческих помещений, выполненного нашей командой.</p>
         </div>
         <?php if (!empty($portfolio)): ?>
             <div class="portfolio-grid">
                 <?php foreach ($portfolio as $index => $item): $headingTag = 'h3'; require __DIR__ . '/../partials/portfolio-card.php'; endforeach; ?>
             </div>
-        <?php else: ?>
-            <div class="cards service-cards">
-                <?php foreach (array_slice($commercialServices, 0, 3) as $item): $cardImage = ['src' => $item['image_path'], 'alt' => $item['image_alt'] ?? $item['title'], 'width' => 1600, 'height' => 1068]; ?>
-                    <article class="card">
-                        <div class="media-frame card-image"><?= picture($cardImage) ?></div>
-                        <h3><?= e($item['title']) ?></h3>
-                    </article>
-                <?php endforeach; ?>
-            </div>
         <?php endif; ?>
+        <a class="btn btn-outline" href="/portfolio/">Смотреть все работы</a>
     </div>
 </section>
 <section class="section" id="geo">

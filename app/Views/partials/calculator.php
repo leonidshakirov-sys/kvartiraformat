@@ -3,6 +3,7 @@ use App\Core\Csrf;
 use App\Support\CommercialCatalog;
 use App\Support\HouseCatalog;
 $calcLeadType = $calcLeadType ?? 'apartment';
+$calcServiceSlug = $calcServiceSlug ?? '';
 $lockDirection = $lockDirection ?? false;
 $propertyType = $propertyType ?? '';
 $propertyTypes = CommercialCatalog::propertyTypes();
@@ -156,10 +157,13 @@ $titles = [
             </div>
             <input type="hidden" name="property_type" data-sync-property>
             <input type="hidden" name="repair_type" data-sync-repair>
+            <?php if (in_array($calcServiceSlug, ['remont-vannoy-i-sanuzla', 'sanuzlov'], true)): ?>
+                <input type="hidden" name="service_slug" value="<?= e($calcServiceSlug) ?>">
+            <?php endif; ?>
             <input type="hidden" name="area" data-sync-area>
             <div class="calc-result">
                 <strong data-estimate>Индивидуальный расчёт</strong>
-                <p>Ориентир появляется только по утверждённому тарифу. Точная смета готовится после осмотра.</p>
+                <p>Предварительная стоимость работ без материалов. Точная смета составляется после осмотра.</p>
                 <label class="consent"><input type="checkbox" name="privacy_consent" value="1" required> Согласен(на) на обработку персональных данных.</label>
                 <button class="btn btn-primary" type="submit">Получить расчёт</button>
                 <p class="form-result" data-form-result></p>

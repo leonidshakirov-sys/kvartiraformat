@@ -55,11 +55,11 @@ final class PublicController
     public function portfolio(): string
     {
         return $this->view->render('public/portfolio', $this->common([
-            'metaTitle' => 'Примеры интерьеров и вариантов отделки | КвартираФормат',
-            'metaDescription' => 'Примеры интерьеров и вариантов отделки квартир, домов и коммерческих помещений.',
-            'h1' => 'Примеры интерьеров и вариантов отделки',
+            'metaTitle' => 'Наши работы — ремонт квартир, домов и коммерческих помещений | КвартираФормат',
+            'metaDescription' => 'Посмотрите выполненные работы компании КвартираФормат: ремонт квартир, домов и коммерческих помещений в Москве и Московской области.',
+            'h1' => 'Наши выполненные работы',
             'canonical' => '/portfolio/',
-            'portfolio' => $this->repo->portfolio(),
+            'portfolio' => $this->repo->portfolio(null),
             'settings' => $this->repo->settings(),
         ]));
     }
@@ -99,6 +99,7 @@ final class PublicController
             'services' => $this->repo->services('apartment'),
             'houseServices' => $this->repo->services('house'),
             'commercialServices' => $this->repo->services('commercial'),
+            'tariffs' => $this->repo->tariffs('apartment'),
             'faqs' => $this->repo->faqs('apartment'),
             'calcLeadType' => 'apartment',
             'leadType' => 'apartment',
@@ -192,6 +193,7 @@ final class PublicController
             'portfolio' => $this->repo->portfolio('commercial'),
             'works' => CommercialCatalog::commonWorks(),
             'stages' => CommercialCatalog::stages(),
+            'tariffs' => $this->repo->tariffs('commercial'),
             'cities' => CommercialCatalog::cities(),
             'heroImage' => $hero,
             'processImage' => CommercialCatalog::image('process'),

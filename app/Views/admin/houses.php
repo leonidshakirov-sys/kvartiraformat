@@ -64,19 +64,19 @@
 </section>
 <section class="admin-panel">
     <h2>Цены домов</h2>
-    <p>Пока цены не утверждены, на сайте показывается «Индивидуальный расчёт». Не копируйте сюда квартирные тарифы.</p>
+    <p>Цены домов опубликованы отдельно от квартирных тарифов. Чтобы скрыть сумму с сайта, снимите галочку утверждения и сохраните.</p>
     <div class="table-wrap">
         <table>
-            <tr><th>ID</th><th>Slug</th><th>Вид</th><th>Пакет</th><th>Цена/м²</th><th>Утверждён</th><th>Активен</th></tr>
+            <tr><th>ID</th><th>Slug</th><th>Вид</th><th>Сумма</th><th>Ед.</th><th>На сайте</th><th>Изменён</th></tr>
             <?php foreach ($houseTariffs ?? [] as $t): ?>
                 <tr>
                     <td><?= (int)($t['id'] ?? 0) ?></td>
-                    <td><?= e((string)($t['service_slug'] ?? '')) ?></td>
+                    <td><?= e((string)($t['service_slug'] ?? $t['slug'] ?? '')) ?></td>
                     <td><?= e($t['repair_type'] ?? '') ?></td>
-                    <td><?= e($t['package_type'] ?? '') ?></td>
                     <td><?= e((string)($t['price_per_m2'] ?? '')) ?></td>
-                    <td><?= !empty($t['is_approved']) ? 'Да' : 'Нет' ?></td>
-                    <td><?= !empty($t['is_active']) ? 'Да' : 'Нет' ?></td>
+                    <td><?= e((string)($t['price_unit'] ?? $t['unit'] ?? 'm2')) ?></td>
+                    <td><?= !empty($t['is_approved']) && !empty($t['is_active']) ? 'Да' : 'Нет' ?></td>
+                    <td><?= e((string)($t['updated_at'] ?? '')) ?></td>
                 </tr>
             <?php endforeach; ?>
         </table>
@@ -88,7 +88,13 @@
         <label>ID<input name="id" type="number"></label>
         <label>Вид ремонта<input name="repair_type" required></label>
         <label>Пакет<input name="package_type" required></label>
-        <label>Цена за м²<input name="price_per_m2" type="number"></label>
+        <label>Сумма<input name="price_per_m2" type="number"></label>
+        <label>Единица
+            <select name="price_unit">
+                <option value="m2">₽/м²</option>
+                <option value="room">₽ за помещение</option>
+            </select>
+        </label>
         <label>Slug услуги<input name="service_slug" placeholder="kapitalnyy"></label>
         <label>Примечание<input name="note" value="Стоимость работ без материалов"></label>
         <label>Сортировка<input name="sort_order" type="number" value="100"></label>
