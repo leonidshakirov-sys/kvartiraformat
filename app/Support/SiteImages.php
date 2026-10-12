@@ -223,8 +223,8 @@ final class SiteImages
                 'page' => ['src' => '/assets/images/services/capital-page.webp', 'alt' => 'Штукатурка стен при капитальном ремонте', 'width' => 1600, 'height' => 900],
             ],
             'kosmeticheskiy-remont' => [
-                'card' => ['src' => '/assets/images/services/cosmetic.webp', 'alt' => 'Покраска стен при косметическом ремонте', 'width' => 1200, 'height' => 840],
-                'page' => ['src' => '/assets/images/services/cosmetic-page.webp', 'alt' => 'Обычная квартира после косметического обновления', 'width' => 1600, 'height' => 900],
+                'card' => ['src' => '/assets/images/services/cosmetic.webp', 'alt' => 'Мастер в форме КвартираФормат красит стену валиком при косметическом ремонте', 'width' => 1448, 'height' => 1086],
+                'page' => ['src' => '/assets/images/services/cosmetic-page.webp', 'alt' => 'Мастер в форме КвартираФормат красит стену валиком при косметическом ремонте', 'width' => 1448, 'height' => 1086],
             ],
             'dizaynerskiy-remont' => [
                 'card' => ['src' => '/assets/images/services/designer.webp', 'alt' => 'Дизайнерский ремонт квартиры', 'width' => 1200, 'height' => 840],
