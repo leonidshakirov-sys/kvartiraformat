@@ -198,6 +198,7 @@ CREATE TABLE IF NOT EXISTS leads (
   work_start VARCHAR(160) NULL,
   has_project VARCHAR(80) NULL,
   premise_condition VARCHAR(160) NULL,
+  quiz_payload MEDIUMTEXT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   INDEX idx_leads_created (created_at),
